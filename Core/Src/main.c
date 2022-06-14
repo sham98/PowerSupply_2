@@ -49,7 +49,7 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
-
+uint16_t vjs;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
