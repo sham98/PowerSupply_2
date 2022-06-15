@@ -31,6 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define Enc_V __HAL_TIM_GET_COUNTER(&htim1)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
