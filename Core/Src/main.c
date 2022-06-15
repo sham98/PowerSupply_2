@@ -112,6 +112,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim1, ALL_CHANNELS);
   HAL_TIM_Encoder_Start(&htim3, ALL_CHANNELS);
+
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
