@@ -121,7 +121,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
 
-  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
+//  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
   HAL_TIM_Base_Start_IT(&htim14);
 
   HAL_ADCEx_Calibration_Start(&hadc);
