@@ -671,6 +671,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 	}
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if (GPIO_Pin == GPIO_PIN_12)
+	{
+		if (O_S == )
+		{
+		__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+		}
+		else if (O_S == )
+		{
+		__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+		}
+	}
+}
+
 /* USER CODE END 4 */
 
 /**
