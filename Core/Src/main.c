@@ -52,6 +52,7 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
+uint16_t AData[3];
 
 /* USER CODE END PV */
 
@@ -116,6 +117,9 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
+
+  HAL_ADCEx_Calibration_Start(&hadc);
+  HAL_ADC_Start_DMA(&hadc, AData, 3);
   /* USER CODE END 2 */
 
   /* Infinite loop */
