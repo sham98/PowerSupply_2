@@ -41,7 +41,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- ADC_HandleTypeDef hadc;
+ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
@@ -110,7 +110,8 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Encoder_Start(&htim1, ALL_CHANNELS);
+  HAL_TIM_Encoder_Start(&htim3, ALL_CHANNELS);
   /* USER CODE END 2 */
 
   /* Infinite loop */
