@@ -41,7 +41,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc;
+ ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
