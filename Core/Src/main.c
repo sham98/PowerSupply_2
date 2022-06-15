@@ -40,6 +40,7 @@
 
 /* Private variables ---------------------------------------------------------*/
  ADC_HandleTypeDef hadc;
+DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -59,8 +60,9 @@ static void MX_ADC_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM16_Init(void);
-static void MX_TIM17_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -102,8 +104,9 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_TIM16_Init();
-  MX_TIM17_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -188,10 +191,10 @@ static void MX_ADC_Init(void)
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
-  hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
@@ -515,6 +518,22 @@ static void MX_TIM17_Init(void)
 
   /* USER CODE END TIM17_Init 2 */
   HAL_TIM_MspPostInit(&htim17);
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
 
