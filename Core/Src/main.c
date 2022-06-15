@@ -609,10 +609,15 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, O_SER_Pin|O_RCK_Pin|O_CLK_Pin|O_S2_Pin
                           |O_S1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : O_SER_Pin O_RCK_Pin O_CLK_Pin O_S2_Pin
-                           O_S1_Pin */
-  GPIO_InitStruct.Pin = O_SER_Pin|O_RCK_Pin|O_CLK_Pin|O_S2_Pin
-                          |O_S1_Pin;
+  /*Configure GPIO pins : O_SER_Pin O_CLK_Pin */
+  GPIO_InitStruct.Pin = O_SER_Pin|O_CLK_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : O_RCK_Pin O_S2_Pin O_S1_Pin */
+  GPIO_InitStruct.Pin = O_RCK_Pin|O_S2_Pin|O_S1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
