@@ -646,29 +646,36 @@ static void MX_GPIO_Init(void)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if (htim == &htim16)
+	if (htim == &htim14)
 	{
-		if (iLED % 2 == 0)
-		{
-			HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
-			HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[LED_Num - 1 - iLED / 2]);
-		}
-		else
-		{
-			HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
-		}
+//		if ()
+//		{
+//			HAL_ADC_PollForConversion(&hadc, 100);
+//		}
+//		else
+//		{
+			if (iLED % 2 == 0)
+			{
+				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
+				HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[LED_Num - 1 - iLED / 2]);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
+			}
 
-		iLED ++;
-		if (iLED >= 2 * LED_Num)
-		{
-			iLED = 0;
-			HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
-			while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
-			HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
+			iLED ++;
+			if (iLED >= 2 * LED_Num)
+			{
+				iLED = 0;
+				HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
+				while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
+				HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
 
-			HAL_TIM_Base_Stop_IT(&htim16);
-			HAL_TIM_Base_Start_IT(&htim3);
-		}
+				HAL_TIM_Base_Stop_IT(&htim16);
+				HAL_TIM_Base_Start_IT(&htim3);
+			}
+//		}
 	}
 }
 
