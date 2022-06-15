@@ -121,8 +121,12 @@ int main(void)
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
 
+  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
+  HAL_TIM_Base_Start_IT(&htim14);
+
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, AData, 3);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -630,6 +634,38 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+/**
+  * @brief  Period elapsed half complete callback in non-blocking mode
+  * @param  htim TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim == &htim16)
+	{
+		if (iLED % 2 == 0)
+		{
+			HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
+			HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[LED_Num - 1 - iLED / 2]);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
+		}
+
+		iLED ++;
+		if (iLED >= 2 * LED_Num)
+		{
+			iLED = 0;
+			HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
+			while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
+			HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
+
+			HAL_TIM_Base_Stop_IT(&htim16);
+			HAL_TIM_Base_Start_IT(&htim3);
+		}
+	}
+}
 /* USER CODE END 4 */
 
 /**
