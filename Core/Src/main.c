@@ -48,6 +48,7 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim14;
 TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
@@ -66,6 +67,7 @@ static void MX_TIM16_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM17_Init(void);
+static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -110,6 +112,7 @@ int main(void)
   MX_DMA_Init();
   MX_I2C1_Init();
   MX_TIM17_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Encoder_Start(&htim1, ALL_CHANNELS);
   HAL_TIM_Encoder_Start(&htim3, ALL_CHANNELS);
@@ -410,6 +413,37 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 0;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 65535;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
 
 }
 
