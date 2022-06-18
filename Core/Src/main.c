@@ -33,6 +33,7 @@
 /* USER CODE BEGIN PD */
 #define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4
 #define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4
+#define LED_Num 90
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -55,6 +56,12 @@ TIM_HandleTypeDef htim17;
 /* USER CODE BEGIN PV */
 uint16_t AData[3];
 
+typedef struct
+{
+	uint16_t Volt;
+	float KRes;
+}Monitor;
+Monitor Volt, Amp, USBAmp;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +121,10 @@ int main(void)
   MX_TIM17_Init();
   MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+  Volt.KRes = 0.266;
+  Amp.KRes = 0.65;
+  USBAmp.KRes = 0.6;
+
   HAL_TIM_Encoder_Start(&htim1, ALL_CHANNELS);
   HAL_TIM_Encoder_Start(&htim3, ALL_CHANNELS);
 
@@ -669,12 +680,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
 				HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
 
-				HAL_TIM_Base_Stop_IT(&htim16);
-				HAL_TIM_Base_Start_IT(&htim3);
+				HAL_TIM_Base_Stop_IT(&htim14);
 			}
 //		}
 	}
 }
+
+
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
+	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
+	Amp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 100;
+
+	HAL_TIM_Base_Start_IT(&htim14);
+}
+
+
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
