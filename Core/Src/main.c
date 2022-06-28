@@ -703,9 +703,15 @@ void SevSegm (uint8_t Num)
 }
 
 
-void SerialArray (void)
+void SerialArray (uint16_t volt, uint8_t Loc)
 {
-
+	for (i = 0; i <= 3; i ++)
+	{
+		Num = volt % 10;
+		volt = volt / 10;
+		SevNum = SevSegm(Num);
+		LED_Data [Loc - i] = SevNum;
+	}
 }
 
 
@@ -727,14 +733,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			if (iLED % 2 == 0)
 			{
 				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
-				HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[LED_Num - 1 - iLED / 2]);
+				HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
+				iBit ++;
 			}
 			else
 			{
 				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
 			}
 
-			iLED ++;
+			if (iBit >= 8)
+			{
+				iLED ++;
+				iBit = 0;
+			}
 			if (iLED >= 2 * LED_Num)
 			{
 				iLED = 0;
@@ -753,13 +764,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
-	for (i = 0; i <= 3; i ++)
-	{
-		Num [i] = Volt.Volt % 10;
-		Volt.Volt = Volt.Volt / 10;
-		SevNum = SevSegm(Num [i]);
-		SerialArray (SevNum, i);
-	}
+	SerialArray (Volt.Volt, 0);
+
 	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
 	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
 
