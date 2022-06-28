@@ -56,6 +56,24 @@ TIM_HandleTypeDef htim17;
 /* USER CODE BEGIN PV */
 uint16_t AData[3];
 
+typedef union
+{
+  struct
+  {
+    unsigned int A : 1;
+    unsigned int B : 1;
+    unsigned int C : 1;
+    unsigned int D : 1;
+    unsigned int E : 1;
+    unsigned int F : 1;
+    unsigned int G : 1;
+    unsigned int DP : 1;
+  }bit;
+  unsigned int ShiftByte;
+}ShiftLED;
+
+ShiftLED SSV1, SSV2, SSV3, SSV4, SSI1, SSI2, SSI3, SSI4, SSU1, SSU2, SSL1, SSL2;
+
 typedef struct
 {
 	uint16_t Volt;
@@ -647,6 +665,22 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void SevSegm (void)
+{
+	switch (Num)
+	{
+	case 0:
+		Num [0] = 0xFF;
+		break;
+	case 1:
+		Num [0] = 0xFF;
+		break;
+
+	}
+}
+
+
+
 /**
   * @brief  Period elapsed half complete callback in non-blocking mode
   * @param  htim TIM handle
@@ -691,8 +725,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
+	for (i = 0; i <= 3; i ++)
+	{
+		Num [i] = Volt.Volt % 10;
+		Volt.Volt = Volt.Volt / 10;
+	}
 	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
-	Amp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 100;
+	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
 
 	HAL_TIM_Base_Start_IT(&htim14);
 }
