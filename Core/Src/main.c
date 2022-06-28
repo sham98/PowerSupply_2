@@ -665,7 +665,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void SevSegm (void)
+void SevSegm (uint8_t Num)
 {
 	switch (Num)
 	{
@@ -675,10 +675,38 @@ void SevSegm (void)
 	case 1:
 		Num [0] = 0xFF;
 		break;
-
+	case 2:
+		Num [0] = 0xFF;
+		break;
+	case 3:
+		Num [0] = 0xFF;
+		break;
+	case 4:
+		Num [0] = 0xFF;
+		break;
+	case 5:
+		Num [0] = 0xFF;
+		break;
+	case 6:
+		Num [0] = 0xFF;
+		break;
+	case 7:
+		Num [0] = 0xFF;
+		break;
+	case 8:
+		Num [0] = 0xFF;
+		break;
+	case 9:
+		Num [0] = 0xFF;
+		break;
 	}
 }
 
+
+void SerialArray (void)
+{
+
+}
 
 
 /**
@@ -729,6 +757,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	{
 		Num [i] = Volt.Volt % 10;
 		Volt.Volt = Volt.Volt / 10;
+		SevNum = SevSegm(Num [i]);
+		SerialArray (SevNum, i);
 	}
 	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
 	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
