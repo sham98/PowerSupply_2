@@ -703,7 +703,7 @@ void SevSegm (uint8_t Num)
 }
 
 
-void SerialArray (uint16_t volt, uint8_t Loc)
+void Mon4Seg (uint16_t volt, uint8_t Loc)
 {
 	for (i = 0; i <= 3; i ++)
 	{
@@ -713,6 +713,20 @@ void SerialArray (uint16_t volt, uint8_t Loc)
 		LED_Data [Loc - i] = SevNum;
 	}
 }
+
+
+void Mon2Seg (uint16_t volt, uint8_t Loc)
+{
+	for (i = 0; i <= 1; i ++)
+	{
+		Num = volt % 10;
+		volt = volt / 10;
+		SevNum = SevSegm(Num);
+		LED_Data [Loc - i] = SevNum;
+	}
+}
+
+
 
 
 /**
@@ -763,11 +777,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
+	void (* SerialArray)(uint8_t , uint8_t) = & Mon4Seg;
 	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
-	SerialArray (Volt.Volt, 0);
+	SerialArray (Volt.Volt, 3);
 
 	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
+	SerialArray (Amp.Volt, 7);
+
+	void (* SerialArray)(uint8_t , uint8_t) = & Mon2Seg;
 	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
+	SerialArray (USBAmp.Volt, 9);
 
 	HAL_TIM_Base_Start_IT(&htim14);
 }
@@ -788,6 +807,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		}
 	}
 }
+
+
+
 
 /* USER CODE END 4 */
 
