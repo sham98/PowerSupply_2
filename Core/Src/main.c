@@ -43,6 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
  ADC_HandleTypeDef hadc;
+DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -89,8 +90,9 @@ static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_TIM17_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -133,8 +135,9 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM16_Init();
   MX_I2C1_Init();
-  MX_TIM17_Init();
+  MX_DMA_Init();
   MX_TIM14_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
   Volt.KRes = 0.266;
   Amp.KRes = 0.65;
@@ -244,7 +247,7 @@ static void MX_ADC_Init(void)
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = ENABLE;
+  hadc.Init.DMAContinuousRequests = DISABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
@@ -599,6 +602,22 @@ static void MX_TIM17_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -756,11 +775,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		else if (EncoderSpeed < 10)
 		{
-
+			iLED = 0;
 		}
 		else if (EncoderSpeed < 20)
 		{
-
+			iLED = 0;
 		}
 	}
 }
