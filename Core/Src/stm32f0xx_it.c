@@ -129,7 +129,7 @@ void SysTick_Handler(void)
 
 	if (indx == 500)
 	{
-		speed = ((position - oldpos) * 2);  // speed in clicks/sec
+		EncoderSpeed = ((position - oldpos) * 2);  // speed in clicks/sec
 		oldpos = position;
 		indx = 0;
 	}

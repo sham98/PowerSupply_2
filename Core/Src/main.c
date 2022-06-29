@@ -719,38 +719,49 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-//		if ()
-//		{
-//			HAL_ADC_PollForConversion(&hadc, 100);
-//		}
-//		else
-//		{
-			if (iLED % 2 == 0)
+		if (EncoderSpeed == 0)
+		{
+			if (iLED == 0)
 			{
-				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
-				HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
-				iBit ++;
+				HAL_ADC_PollForConversion(&hadc, 100);
 			}
 			else
 			{
-				HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
-			}
+				if (iLED % 2 == 0)
+				{
+					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
+					HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
+					iBit ++;
+				}
+				else
+				{
+					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
+				}
 
-			if (iBit >= 8)
-			{
-				iLED ++;
-				iBit = 0;
-			}
-			if (iLED >= 2 * LED_Num)
-			{
-				iLED = 0;
-				HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
-				while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
-				HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
+				if (iBit >= 8)
+				{
+					iLED ++;
+					iBit = 0;
+				}
+				if (iLED >= 2 * LED_Num)
+				{
+					iLED = 0;
+					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
+					while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
+					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
 
-				HAL_TIM_Base_Stop_IT(&htim14);
+					HAL_TIM_Base_Stop_IT(&htim14);
+				}
 			}
-//		}
+		}
+		else if (EncoderSpeed < 10)
+		{
+
+		}
+		else if (EncoderSpeed < 20)
+		{
+
+		}
 	}
 }
 
