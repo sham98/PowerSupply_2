@@ -738,7 +738,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-		if (EncoderSpeed == 0)
+		iDisp --;
+		if ((EncoderSpeed == 0) & (iDisp == 0))
 		{
 			if (iLED == 0)
 			{
@@ -775,10 +776,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		else if (EncoderSpeed < 10)
 		{
+			iDisp = Disp3s;
 			iLED = 0;
 		}
 		else if (EncoderSpeed < 20)
 		{
+			iDisp = Disp3s;
 			iLED = 0;
 		}
 	}
