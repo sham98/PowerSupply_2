@@ -1,2 +1,8 @@
 
 .settings/language.settings.xml
+*.dep
+*.crun
+*.o
+*.dbgdt
+*.dnx
+*.wsdt
