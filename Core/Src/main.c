@@ -42,7 +42,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- ADC_HandleTypeDef hadc;
+ADC_HandleTypeDef hadc;
 DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
@@ -54,8 +54,8 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
-uint16_t AData[3];
-
+uint16_t AData[3], LED_Data [LED_Num];
+uint8_t iBit,iLED;
 typedef union
 {
   struct
@@ -143,8 +143,8 @@ int main(void)
   Amp.KRes = 0.65;
   USBAmp.KRes = 0.6;
 
-  HAL_TIM_Encoder_Start(&htim1, ALL_CHANNELS);
-  HAL_TIM_Encoder_Start(&htim3, ALL_CHANNELS);
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -664,68 +664,68 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void SevSegm (uint8_t Num)
-{
-	switch (Num)
-	{
-	case 0:
-		Num [0] = 0xFF;
-		break;
-	case 1:
-		Num [0] = 0xFF;
-		break;
-	case 2:
-		Num [0] = 0xFF;
-		break;
-	case 3:
-		Num [0] = 0xFF;
-		break;
-	case 4:
-		Num [0] = 0xFF;
-		break;
-	case 5:
-		Num [0] = 0xFF;
-		break;
-	case 6:
-		Num [0] = 0xFF;
-		break;
-	case 7:
-		Num [0] = 0xFF;
-		break;
-	case 8:
-		Num [0] = 0xFF;
-		break;
-	case 9:
-		Num [0] = 0xFF;
-		break;
-	}
-}
-
-
-void Mon4Seg (uint16_t volt, uint8_t Loc)
-{
-	for (i = 0; i <= 3; i ++)
-	{
-		Num = volt % 10;
-		volt = volt / 10;
-		SevNum = SevSegm(Num);
-		LED_Data [Loc - i] = SevNum;
-	}
-}
-
-
-void Mon2Seg (uint16_t volt, uint8_t Loc)
-{
-	for (i = 0; i <= 1; i ++)
-	{
-		Num = volt % 10;
-		volt = volt / 10;
-		SevNum = SevSegm(Num);
-		LED_Data [Loc - i] = SevNum;
-	}
-}
-
+////
+////void SevSegm (uint8_t Num)
+////{
+////	switch (Num)
+////	{
+////	case 0:
+////		Num [0] = 0xFF;
+////		break;
+////	case 1:
+////		Num [0] = 0xFF;
+////		break;
+////	case 2:
+////		Num [0] = 0xFF;
+////		break;
+////	case 3:
+////		Num [0] = 0xFF;
+////		break;
+////	case 4:
+////		Num [0] = 0xFF;
+////		break;
+////	case 5:
+////		Num [0] = 0xFF;
+////		break;
+////	case 6:
+////		Num [0] = 0xFF;
+////		break;
+////	case 7:
+////		Num [0] = 0xFF;
+////		break;
+////	case 8:
+////		Num [0] = 0xFF;
+////		break;
+////	case 9:
+////		Num [0] = 0xFF;
+////		break;
+////	}
+////}
+//
+//
+//void Mon4Seg (uint16_t volt, uint8_t Loc)
+//{
+//	for (uint8_t i = 0; i <= 3; i ++)
+//	{
+//		uint16_t Num = volt % 10;
+//		volt = volt / 10;
+//		uint16_t SevNum = SevSegm(Num);
+//		LED_Data [Loc - i] = SevNum;
+//	}
+//}
+//
+//
+//void Mon2Seg (uint16_t volt, uint8_t Loc)
+//{
+//	for (uint8_t i = 0; i <= 1; i ++)
+//	{
+//		uint16_t Num = volt % 10;
+//		volt = volt / 10;
+//		uint16_t SevNum = SevSegm(Num);
+//		LED_Data [Loc - i] = SevNum;
+//	}
+//}
+//
 
 
 
@@ -738,9 +738,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-		iDisp --;
-		if ((EncoderSpeed == 0) & (iDisp == 0))
-		{
+//		iDisp --;
+//		if (iDisp == 0)
+//		{
 			if (iLED == 0)
 			{
 				HAL_ADC_PollForConversion(&hadc, 100);
@@ -749,13 +749,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			{
 				if (iLED % 2 == 0)
 				{
-					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, RESET);
+					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
 					iBit ++;
 				}
 				else
 				{
-					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, SET);
+					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
 				}
 
 				if (iBit >= 8)
@@ -766,62 +766,62 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				if (iLED >= 2 * LED_Num)
 				{
 					iLED = 0;
-					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, SET);
+					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_SET);
 					while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
-					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, RESET);
+					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
 
 					HAL_TIM_Base_Stop_IT(&htim14);
 				}
 			}
-		}
-		else if (EncoderSpeed < 10)
-		{
-			iDisp = Disp3s;
-			iLED = 0;
-		}
-		else if (EncoderSpeed < 20)
-		{
-			iDisp = Disp3s;
-			iLED = 0;
-		}
+//		}
+//		else if (EncoderSpeed < 10)
+//		{
+//			iDisp = Disp3s;
+//			iLED = 0;
+//		}
+//		else if (EncoderSpeed < 20)
+//		{
+//			iDisp = Disp3s;
+//			iLED = 0;
+//		}
 	}
 }
 
 
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-	void (* SerialArray)(uint8_t , uint8_t) = & Mon4Seg;
-	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
-	SerialArray (Volt.Volt, 3);
-
-	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
-	SerialArray (Amp.Volt, 7);
-
-	void (* SerialArray)(uint8_t , uint8_t) = & Mon2Seg;
-	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
-	SerialArray (USBAmp.Volt, 9);
-
-	HAL_TIM_Base_Start_IT(&htim14);
-}
-
-
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if (GPIO_Pin == GPIO_PIN_12)
-	{
-		if (O_S == )
-		{
-		__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
-		}
-		else if (O_S == )
-		{
-		__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
-		}
-	}
-}
-
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+//{
+//	void (* SerialArray)(uint8_t , uint8_t) = & Mon4Seg;
+//	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
+//	SerialArray (Volt.Volt, 3);
+//
+//	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
+//	SerialArray (Amp.Volt, 7);
+//
+//	void (* SerialArray)(uint8_t , uint8_t) = & Mon2Seg;
+//	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
+//	SerialArray (USBAmp.Volt, 9);
+//
+//	HAL_TIM_Base_Start_IT(&htim14);
+//}
+//
+//
+//
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+//{
+//	if (GPIO_Pin == GPIO_PIN_12)
+//	{
+//		if (O_S == )
+//		{
+//		__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+//		}
+//		else if (O_S == )
+//		{
+//		__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+//		}
+//	}
+//}
+//
 
 
 
