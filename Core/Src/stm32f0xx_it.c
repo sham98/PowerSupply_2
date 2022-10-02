@@ -126,27 +126,30 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-	indx ++;
+//	indx ++;
+//
+//	if (indx == 500)
+//	{
+//		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
+//		if (EncoderSpeed_V > 10)
+//		{
+//			__HAL_TIM_SET_COUNTER(&htim1,ENC_V + 10);
+//		}
+//		oldpos_V = Enc_V;
+//
+//
+//		EncoderSpeed_I = ((Enc_I - oldpos_I) * 2);  // speed in clicks/sec
+//		if (EncoderSpeed_I > 10)
+//		{
+//			__HAL_TIM_SET_COUNTER(&htim1,ENC_I + 10);
+//		}
+//		oldpos_I = Enc_I;
+//		indx = 0;
+//}
 
-	if (indx == 500)
-	{
-		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_V > 10)
-		{
-			__HAL_TIM_SET_COUNTER(&htim1,ENC_V + 10);
-		}
-		oldpos_V = Enc_V;
-
-
-		EncoderSpeed_I = ((Enc_I - oldpos_I) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_I > 10)
-		{
-			__HAL_TIM_SET_COUNTER(&htim1,ENC_I + 10);
-		}
-		oldpos_I = Enc_I;
-		indx = 0;
-}
-
+  
+  
+  
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
