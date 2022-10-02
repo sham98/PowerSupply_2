@@ -157,7 +157,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim14);
 
   HAL_ADCEx_Calibration_Start(&hadc);
-//  HAL_ADC_Start_DMA(&hadc, AData, 3);
+  HAL_ADC_Start_DMA(&hadc, AData, 3);
   Mon4Seg (2100,0);
   /* USER CODE END 2 */
 
