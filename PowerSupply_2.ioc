@@ -1,9 +1,10 @@
 #MicroXplorer Configuration settings - do not modify
 ADC.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
-ADC.ContinuousConvMode=DISABLE
-ADC.DMAContinuousRequests=DISABLE
+ADC.ContinuousConvMode=ENABLE
+ADC.DMAContinuousRequests=ENABLE
 ADC.EOCSelection=ADC_EOC_SEQ_CONV
-ADC.IPParameters=ContinuousConvMode,EOCSelection,DMAContinuousRequests,ClockPrescaler
+ADC.IPParameters=ContinuousConvMode,EOCSelection,DMAContinuousRequests,ClockPrescaler,LowPowerAutoWait
+ADC.LowPowerAutoWait=DISABLE
 Dma.ADC.0.Direction=DMA_PERIPH_TO_MEMORY
 Dma.ADC.0.Instance=DMA1_Channel1
 Dma.ADC.0.MemDataAlignment=DMA_MDATAALIGN_HALFWORD

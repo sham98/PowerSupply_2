@@ -33,7 +33,10 @@
 /* USER CODE BEGIN PD */
 //#define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4       //add in main.h
 //#define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4       //add in main.h
-#define LED_Num 96
+#define LED_Num         96
+#define ADC_V           AData [0]
+#define ADC_I           AData [1]
+#define ADC_I_USB       AData [2]
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -157,7 +160,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim14);
 
   HAL_ADCEx_Calibration_Start(&hadc);
-  HAL_ADC_Start_DMA(&hadc, AData, 3);
+  HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
   Mon4Seg (2100,0);
   /* USER CODE END 2 */
 
@@ -248,11 +251,11 @@ static void MX_ADC_Init(void)
   hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = DISABLE;
+  hadc.Init.DMAContinuousRequests = ENABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
@@ -873,7 +876,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           else
           {
             HAL_ADC_PollForConversion(&hadc, 100);
-            Mon4Seg(adc_v,0);
+            Mon4Seg(ADC_V,0);
           }
 
           if (DispEncI > 0)
@@ -884,7 +887,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           else
           {
             HAL_ADC_PollForConversion(&hadc, 100);
-            Mon4Seg(adc_I,0);
+            Mon4Seg(ADC_I,0);
           }
 				if (iLED % 2 == 0)
 				{
