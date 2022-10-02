@@ -100,6 +100,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4
 #define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4
+#define Disp3s          3000
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

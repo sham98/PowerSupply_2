@@ -47,6 +47,7 @@ extern TIM_HandleTypeDef htim3;
 extern uint16_t indx;
 uint16_t EncoderSpeed_V = 0 ,oldpos_V = 0;
 uint16_t EncoderSpeed_I = 0 ,oldpos_I = 0;
+extern uint16_t DispEncV, DispEncI;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -133,19 +134,20 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	indx ++;
 
-	if (indx == 500)
+	if (indx >= 500)
 	{
+                indx = 0;
 		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
 		if (EncoderSpeed_V > 10)
 		{
                   __HAL_TIM_SET_COUNTER(&htim1,Enc_V + 10);
                   oldpos_V = Enc_V;
-                  Disp = Disp3s;
+                  DispEncV = Disp3s;
 		}
                 else if (EncoderSpeed_V > 0)
                 {
                   oldpos_V = Enc_V;                  
-                  Disp = Disp3s;
+                  DispEncV = Disp3s;
                 }
 
 
@@ -154,12 +156,12 @@ void SysTick_Handler(void)
 		{
                   __HAL_TIM_SET_COUNTER(&htim1,Enc_I + 10);
                   oldpos_I = Enc_I;
-                  Disp = Disp3s;
+                  DispEncI = Disp3s;
 		}
                 else if (EncoderSpeed_I > 0)
                 {
                   oldpos_I = Enc_I;
-                  indx = 0;
+                  DispEncI = Disp3s;
                 }
         }
 

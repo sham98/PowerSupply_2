@@ -882,12 +882,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           if (DispEncI > 0)
           {
             DispEncI --;
-            Mon4Seg (Enc_I,0);
+            Mon4Seg (Enc_I,32);
           }
           else
           {
             HAL_ADC_PollForConversion(&hadc, 100);
-            Mon4Seg(ADC_I,0);
+            Mon4Seg(ADC_I,32);
           }
 				if (iLED % 2 == 0)
 				{
