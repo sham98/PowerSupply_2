@@ -31,8 +31,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4
-#define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4
+//#define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4       //add in main.h
+//#define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4       //add in main.h
 #define LED_Num 96
 /* USER CODE END PD */
 
@@ -54,26 +54,27 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
-uint16_t AData[3], iLED = 0;
+uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t iBit = 0, LED_Data [LED_Num] = {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0};
+uint16_t DispEncV = 0, DispEncI = 0;
 //uint8_t * Buf [8];
-typedef union
-{
-  struct
-  {
-    unsigned int A : 1;
-    unsigned int B : 1;
-    unsigned int C : 1;
-    unsigned int D : 1;
-    unsigned int E : 1;
-    unsigned int F : 1;
-    unsigned int G : 1;
-    unsigned int DP : 1;
-  }bit;
-  unsigned int ShiftByte;
-}ShiftLED;
-
-ShiftLED SSV1, SSV2, SSV3, SSV4, SSI1, SSI2, SSI3, SSI4, SSU1, SSU2, SSL1, SSL2;
+//typedef union
+//{
+//  struct
+//  {
+//    unsigned int A : 1;
+//    unsigned int B : 1;
+//    unsigned int C : 1;
+//    unsigned int D : 1;
+//    unsigned int E : 1;
+//    unsigned int F : 1;
+//    unsigned int G : 1;
+//    unsigned int DP : 1;
+//  }bit;
+//  unsigned int ShiftByte;
+//}ShiftLED;
+//
+//ShiftLED SSV1, SSV2, SSV3, SSV4, SSI1, SSI2, SSI3, SSI4, SSU1, SSU2, SSL1, SSL2;
 
 typedef struct
 {
@@ -806,15 +807,21 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
   if (Frac == 0)
   {
     uint16_t *pBuf = SevSegm (0);
-    for (uint8_t iInteger = 0; iInteger <= 8; iInteger ++)
+    for (uint8_t iFrac = 0; iFrac <= 8; iFrac ++)
     {
-      LED_Data [Loc + 16 + iInteger] = *(pBuf + iInteger);
-      LED_Data [Loc + 24 + iInteger] = 0;
+      LED_Data [Loc + 16 + iFrac] = *(pBuf + iFrac);
+      LED_Data [Loc + 24 + iFrac] = 0;
     }
   }
   else
   {
-    
+    uint16_t * pBuf1 = SevSegm(Frac / 10);
+    uint16_t * pBuf2 = SevSegm(Frac % 10);
+    for (uint8_t iFrac = 0; iFrac <= 8; iFrac ++)
+    {
+      LED_Data [Loc + 16 + iFrac] = *(pBuf1 + iFrac);
+      LED_Data [Loc + 24 + iFrac] = *(pBuf2 + iFrac);
+    }
   }
 //	for (uint8_t i = 0; i <= 3; i ++)
 //	{
@@ -858,6 +865,27 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //			}
 //			else
 //			{
+          if (DispEncV > 0)
+          {
+            DispEncV --;
+            Mon4Seg (Enc_V,0);
+          }
+          else
+          {
+            HAL_ADC_PollForConversion(&hadc, 100);
+            Mon4Seg(adc_v,0);
+          }
+
+          if (DispEncI > 0)
+          {
+            DispEncI --;
+            Mon4Seg (Enc_I,0);
+          }
+          else
+          {
+            HAL_ADC_PollForConversion(&hadc, 100);
+            Mon4Seg(adc_I,0);
+          }
 				if (iLED % 2 == 0)
 				{
 					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
