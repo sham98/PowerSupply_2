@@ -48,6 +48,7 @@ extern uint16_t indx;
 int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
 uint16_t oldpos_V = 0, oldpos_I = 0;
 extern uint16_t DispEncV, DispEncI;
+extern uint16_t Enc_VV, Enc_II;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -139,43 +140,43 @@ void SysTick_Handler(void)
 	if (indx >= 500)
 	{
                 indx = 0;
-		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
+		EncoderSpeed_V = ((Enc_VV - oldpos_V) * 2);  // speed in clicks/sec
 		if (EncoderSpeed_V > 10)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_V + 100);
-                  oldpos_V = Enc_V;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_VV + 400);
+                  oldpos_V = Enc_VV;
                   DispEncV = Disp3s;
 		}
 		else if (EncoderSpeed_V < -10)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_V - 100);
-                  oldpos_V = Enc_V;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_VV - 400);
+                  oldpos_V = Enc_VV;
                   DispEncV = Disp3s;
 		}
                 else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
                 {
-                  oldpos_V = Enc_V;                  
+                  oldpos_V = Enc_VV;                  
                   DispEncV = Disp3s;
                 }
 
 
 
-		EncoderSpeed_I = ((Enc_I - oldpos_I) * 2);  // speed in clicks/sec
+		EncoderSpeed_I = ((Enc_II - oldpos_I) * 2);  // speed in clicks/sec
 		if (EncoderSpeed_I > 10)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I + 100);
-                  oldpos_I = Enc_I;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_II + 400);
+                  oldpos_I = Enc_II;
                   DispEncI = Disp3s;
 		}
 		else if (EncoderSpeed_I < -10)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I - 100);
-                  oldpos_I = Enc_I;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_II - 400);
+                  oldpos_I = Enc_II;
                   DispEncI = Disp3s;
 		}
                 else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
                 {
-                  oldpos_I = Enc_I;
+                  oldpos_I = Enc_II;
                   DispEncI = Disp3s;
                 }
         }
