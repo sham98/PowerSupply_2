@@ -98,8 +98,8 @@ void Error_Handler(void);
 #define ENC_VA_Pin GPIO_PIN_5
 #define ENC_VA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define Enc_V	__HAL_TIM_GET_COUNTER(&htim3) / 4
-#define Enc_I	__HAL_TIM_GET_COUNTER(&htim1) / 4
+#define Enc_V	__HAL_TIM_GET_COUNTER(&htim3)
+#define Enc_I	__HAL_TIM_GET_COUNTER(&htim1)
 #define Disp3s          3000
 #define IF_ADC          0
 #define IF_Disp         1

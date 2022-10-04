@@ -48,7 +48,7 @@ extern uint16_t indx;
 int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
 uint16_t oldpos_V = 0, oldpos_I = 0;
 extern uint16_t DispEncV, DispEncI;
-extern uint16_t Enc_VV, Enc_II;
+//extern uint16_t Enc_VV, Enc_II;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,8 +63,6 @@ extern uint16_t Enc_VV, Enc_II;
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc;
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
 /* USER CODE BEGIN EV */
 
@@ -140,43 +138,43 @@ void SysTick_Handler(void)
 	if (indx >= 500)
 	{
                 indx = 0;
-		EncoderSpeed_V = ((Enc_VV - oldpos_V) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_V > 10)
+		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
+		if (EncoderSpeed_V > 50)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_VV + 400);
-                  oldpos_V = Enc_VV;
+                  __HAL_TIM_SET_COUNTER(&htim3,Enc_V + 500);
+                  oldpos_V = Enc_V + 500;
                   DispEncV = Disp3s;
 		}
-		else if (EncoderSpeed_V < -10)
+		else if (EncoderSpeed_V < -50)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_VV - 400);
-                  oldpos_V = Enc_VV;
+                  __HAL_TIM_SET_COUNTER(&htim3,Enc_V - 500);
+                  oldpos_V = Enc_V - 500;
                   DispEncV = Disp3s;
 		}
                 else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
                 {
-                  oldpos_V = Enc_VV;                  
+                  oldpos_V = Enc_V;                  
                   DispEncV = Disp3s;
                 }
 
 
 
-		EncoderSpeed_I = ((Enc_II - oldpos_I) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_I > 10)
+		EncoderSpeed_I = ((Enc_I - oldpos_I) * 2);  // speed in clicks/sec
+		if (EncoderSpeed_I > 50)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_II + 400);
-                  oldpos_I = Enc_II;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I + 500);
+                  oldpos_I = Enc_I + 500;
                   DispEncI = Disp3s;
 		}
-		else if (EncoderSpeed_I < -10)
+		else if (EncoderSpeed_I < -50)
 		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_II - 400);
-                  oldpos_I = Enc_II;
+                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I - 500);
+                  oldpos_I = Enc_I - 100;
                   DispEncI = Disp3s;
 		}
                 else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
                 {
-                  oldpos_I = Enc_II;
+                  oldpos_I = Enc_I;
                   DispEncI = Disp3s;
                 }
         }
@@ -210,34 +208,6 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
   /* USER CODE END DMA1_Channel1_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM1 capture compare interrupt.
-  */
-void TIM1_CC_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
-
-  /* USER CODE END TIM1_CC_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim1);
-  /* USER CODE BEGIN TIM1_CC_IRQn 1 */
-
-  /* USER CODE END TIM1_CC_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM3 global interrupt.
-  */
-void TIM3_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM3_IRQn 0 */
-
-  /* USER CODE END TIM3_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim3);
-  /* USER CODE BEGIN TIM3_IRQn 1 */
-
-  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**

@@ -60,7 +60,7 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t iBit = 0, LED_Data [LED_Num] = {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0};
 uint16_t DispEncV = 0, DispEncI = 0;
-uint16_t Enc_VV = 0, Enc_II = 0;
+//uint16_t Enc_VV = 0, Enc_II = 0;
 //uint8_t * Buf [8];
 //typedef union
 //{
@@ -150,8 +150,8 @@ int main(void)
   Amp.KRes = 0.65;
   USBAmp.KRes = 0.6;
 
-  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
 //  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 //  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
@@ -373,7 +373,7 @@ static void MX_TIM1_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 10;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
@@ -427,7 +427,7 @@ static void MX_TIM3_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 10;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
@@ -677,17 +677,17 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 ////
 
-void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
-{
-  if (htim == &htim3)
-  {
-    Enc_VV = __HAL_TIM_GET_COUNTER(htim) / 4;
-  }
-  else if (htim == &htim1)
-  {
-    Enc_II = __HAL_TIM_GET_COUNTER(htim) / 4;
-  }
-}
+//void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
+//{
+//  if (htim == &htim3)
+//  {
+//    Enc_VV = __HAL_TIM_GET_COUNTER(htim) / 4;
+//  }
+//  else if (htim == &htim1)
+//  {
+//    Enc_II = __HAL_TIM_GET_COUNTER(htim) / 4;
+//  }
+//}
 
 uint16_t* SevSegm (uint8_t Num)
 {
