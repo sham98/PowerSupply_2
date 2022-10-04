@@ -60,6 +60,7 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t iBit = 0, LED_Data [LED_Num] = {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0};
 uint16_t DispEncV = 0, DispEncI = 0;
+uint16_t Enc_VV = 0, Enc_II = 0;
 //uint8_t * Buf [8];
 //typedef union
 //{
@@ -149,18 +150,20 @@ int main(void)
   Amp.KRes = 0.65;
   USBAmp.KRes = 0.6;
 
-  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
+//  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+//  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+//  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
 
 //  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
   HAL_TIM_Base_Start_IT(&htim14);
 
+  #if IF_ADC
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+  #endif
   Mon4Seg (2100,0);
   /* USER CODE END 2 */
 
@@ -412,7 +415,7 @@ static void MX_TIM3_Init(void)
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
   htim3.Init.Period = 16384;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -673,6 +676,19 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 ////
+
+void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
+{
+  if (htim == &htim3)
+  {
+    Enc_VV = __HAL_TIM_GET_COUNTER(htim) / 4;
+  }
+  else if (htim == &htim1)
+  {
+    Enc_II = __HAL_TIM_GET_COUNTER(htim) / 4;
+  }
+}
+
 uint16_t* SevSegm (uint8_t Num)
 {
   static uint16_t Buf [8];
@@ -859,6 +875,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
+          
 //		iDisp --;
 //		if (iDisp == 0)
 //		{
@@ -868,6 +885,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //			}
 //			else
 //			{
+#if IF_ADC
           if (DispEncV > 0)
           {
             DispEncV --;
@@ -889,33 +907,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             HAL_ADC_PollForConversion(&hadc, 100);
             Mon4Seg(ADC_I,32);
           }
-				if (iLED % 2 == 0)
-				{
-					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
+#endif
+#if IF_Disp
+          if (iLED % 2 == 0)
+          {
+                  HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
+                  HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
 //					HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
 //					iBit ++;
-				}
-				else
-				{
-					HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
-				}
+          }
+          else
+          {
+                  HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
+          }
 
 //				if (iBit >= 8)
 //				{
 //					iLED ++;
 //					iBit = 0;
 //				}
-                                iLED ++;
-				if (iLED >= 2 * LED_Num)
-				{
-					iLED = 0;
-					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_SET);
-					while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
-					HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
+          iLED ++;
+          if (iLED >= 2 * LED_Num)
+          {
+                  iLED = 0;
+                  HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_SET);
+                  while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
+                  HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
 
-					HAL_TIM_Base_Stop_IT(&htim14);
-				}
+                  HAL_TIM_Base_Stop_IT(&htim14);
+          }
+#endif
 //			}
 //		}
 //		else if (EncoderSpeed < 10)
