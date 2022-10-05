@@ -1,8 +1,8 @@
 #MicroXplorer Configuration settings - do not modify
 ADC.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
 ADC.ContinuousConvMode=DISABLE
-ADC.DMAContinuousRequests=ENABLE
-ADC.DiscontinuousConvMode=ENABLE
+ADC.DMAContinuousRequests=DISABLE
+ADC.DiscontinuousConvMode=DISABLE
 ADC.EOCSelection=ADC_EOC_SEQ_CONV
 ADC.IPParameters=ContinuousConvMode,EOCSelection,DMAContinuousRequests,ClockPrescaler,LowPowerAutoWait,DiscontinuousConvMode
 ADC.LowPowerAutoWait=DISABLE
@@ -246,13 +246,13 @@ TIM1.IC2Polarity=TIM_ICPOLARITY_RISING
 TIM1.IPParameters=Period,EncoderMode,IC1Polarity,IC1Filter,IC2Polarity,CounterMode
 TIM1.Period=16384
 TIM14.IPParameters=Period
-TIM14.Period=1000
+TIM14.Period=10000
 TIM16.Channel=TIM_CHANNEL_1
 TIM16.IPParameters=Channel,Period
-TIM16.Period=4096
+TIM16.Period=16384
 TIM17.Channel=TIM_CHANNEL_1
 TIM17.IPParameters=Channel,Period
-TIM17.Period=4096
+TIM17.Period=16384
 TIM3.Channel-PWM\ Generation3\ CH3=TIM_CHANNEL_3
 TIM3.CounterMode=TIM_COUNTERMODE_CENTERALIGNED1
 TIM3.EncoderMode=TIM_ENCODERMODE_TI12

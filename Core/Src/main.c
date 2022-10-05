@@ -157,9 +157,9 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
-//  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-//  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-//  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
 
 //  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
   HAL_TIM_Base_Start_IT(&htim14);
@@ -167,7 +167,7 @@ int main(void)
 //  #if IF_ADC
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-  HAL_ADC_Start(&hadc);
+//  HAL_ADC_Start(&hadc);
   //  #endif
 
   /* USER CODE END 2 */
@@ -260,10 +260,10 @@ static void MX_ADC_Init(void)
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
   hadc.Init.ContinuousConvMode = DISABLE;
-  hadc.Init.DiscontinuousConvMode = ENABLE;
+  hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = ENABLE;
+  hadc.Init.DMAContinuousRequests = DISABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
@@ -480,7 +480,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 0;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 1000;
+  htim14.Init.Period = 10000;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -514,7 +514,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 0;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 4096;
+  htim16.Init.Period = 16384;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -576,7 +576,7 @@ static void MX_TIM17_Init(void)
   htim17.Instance = TIM17;
   htim17.Init.Prescaler = 0;
   htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 4096;
+  htim17.Init.Period = 16384;
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -853,16 +853,9 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
       LED_Data [Loc + 24 + iFrac] = *(pBuf2 + iFrac);
     }
   }
-//	for (uint8_t i = 0; i <= 3; i ++)
-//	{
-//		uint16_t Num = volt % 10;
-//		volt = volt / 10;
-//		SevSegm(Num,Buf);
-////		LED_Data [Loc - i] = SevNum;
-//	}
 }
-//
-//
+
+
 void Mon2Seg (uint16_t volt)
 {
   for (uint8_t i = 0; i <= 1; i ++)
@@ -895,6 +888,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
+          HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
           if (DispEncV >= Disp3s)
           {
             uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
@@ -954,21 +948,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-//{
-//	void (* SerialArray)(uint8_t , uint8_t) = & Mon4Seg;
-//	Volt.Volt = AData [0] * 3.3 / 4096 * Volt.KRes * 100;
-//	SerialArray (Volt.Volt, 3);
-//
-//	Amp.Volt = AData [1] * 3.3 / 4096 * Amp.KRes * 100;
-//	SerialArray (Amp.Volt, 7);
-//
-//	void (* SerialArray)(uint8_t , uint8_t) = & Mon2Seg;
-//	USBAmp.Volt = AData [2] * 3.3 / 4096 * USBAmp.KRes * 10;
-//	SerialArray (USBAmp.Volt, 9);
-//
-//	HAL_TIM_Base_Start_IT(&htim14);
-//}
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+//  HAL_ADC_Start_DMA(hadc, (uint32_t*)AData, 3);
+//  HAL_ADC_PollForConversion(hadc, 100);
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 3 * AData [0]);
+  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 3 * AData [1]);
+  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, 3 * AData [2]);
+}
 //
 //
 //
