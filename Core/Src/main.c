@@ -58,8 +58,12 @@ TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
 uint16_t AData[3], iLED = 0, indx = 0;
-uint8_t iBit = 0, LED_Data [LED_Num] = {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0};
+uint8_t iBit = 0, LED_Data [LED_Num] = {0};
 uint16_t DispEncV = 0, DispEncI = 0;
+uint16_t Disp3s = 1000;
+uint16_t EncoderSpeed = 50;
+uint16_t EncoderSpeedInc = 500;
+uint16_t SampleTimeEncSpeed = 500;
 //uint16_t Enc_VV = 0, Enc_II = 0;
 //uint8_t * Buf [8];
 //typedef union
@@ -160,11 +164,12 @@ int main(void)
 //  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
   HAL_TIM_Base_Start_IT(&htim14);
 
-  #if IF_ADC
+//  #if IF_ADC
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-  #endif
-  Mon4Seg (2100,0);
+  HAL_ADC_Start(&hadc);
+  //  #endif
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -254,8 +259,8 @@ static void MX_ADC_Init(void)
   hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = ENABLE;
-  hadc.Init.DiscontinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.DiscontinuousConvMode = ENABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.DMAContinuousRequests = ENABLE;
@@ -475,7 +480,7 @@ static void MX_TIM14_Init(void)
   htim14.Instance = TIM14;
   htim14.Init.Prescaler = 0;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim14.Init.Period = 65535;
+  htim14.Init.Period = 1000;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -721,7 +726,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [3] = 1;
           Buf [4] = 1;
           Buf [5] = 0;
-          Buf [6] = 0;
+          Buf [6] = 1;
           Buf [7] = 0;
           break;
   case 3:
@@ -802,10 +807,10 @@ uint16_t* SevSegm (uint8_t Num)
 void Mon4Seg (uint16_t volt, uint8_t Loc)
 {
   uint8_t Integer = volt / 100;
-  if (Integer == 0)
+  if (Integer <= 9)
   {
-    uint16_t *pBuf = SevSegm (0);
-    for (uint8_t iInteger = 0; iInteger <= 8; iInteger ++)
+    uint16_t *pBuf = SevSegm (Integer);
+    for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
     {
       LED_Data [Loc + iInteger] = 0;
       LED_Data [Loc + 8 + iInteger] = *(pBuf + iInteger);
@@ -814,10 +819,13 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
   else
   {
     uint16_t * pBuf1 = SevSegm(Integer / 10);
-    uint16_t * pBuf2 = SevSegm(Integer % 10);
-    for (uint8_t iInteger = 0; iInteger <= 8; iInteger ++)
+    for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
     {
       LED_Data [Loc + iInteger] = *(pBuf1 + iInteger);
+    }
+    uint16_t * pBuf2 = SevSegm(Integer % 10);
+    for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
+    {
       LED_Data [Loc + 8 + iInteger] = *(pBuf2 + iInteger);
     }
   }
@@ -826,7 +834,7 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
   if (Frac == 0)
   {
     uint16_t *pBuf = SevSegm (0);
-    for (uint8_t iFrac = 0; iFrac <= 8; iFrac ++)
+    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
     {
       LED_Data [Loc + 16 + iFrac] = *(pBuf + iFrac);
       LED_Data [Loc + 24 + iFrac] = 0;
@@ -835,10 +843,13 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
   else
   {
     uint16_t * pBuf1 = SevSegm(Frac / 10);
-    uint16_t * pBuf2 = SevSegm(Frac % 10);
-    for (uint8_t iFrac = 0; iFrac <= 8; iFrac ++)
+    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
     {
       LED_Data [Loc + 16 + iFrac] = *(pBuf1 + iFrac);
+    }
+    uint16_t * pBuf2 = SevSegm(Frac % 10);
+    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
+    {
       LED_Data [Loc + 24 + iFrac] = *(pBuf2 + iFrac);
     }
   }
@@ -852,16 +863,25 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
 }
 //
 //
-//void Mon2Seg (uint16_t volt, uint8_t Loc)
-//{
-//	for (uint8_t i = 0; i <= 1; i ++)
-//	{
-//		uint16_t Num = volt % 10;
-//		volt = volt / 10;
-//		uint16_t SevNum = SevSegm(Num);
-//		LED_Data [Loc - i] = SevNum;
-//	}
-//}
+void Mon2Seg (uint16_t volt)
+{
+  for (uint8_t i = 0; i <= 1; i ++)
+  {
+    uint16_t Num = volt % 10;
+    volt = volt / 10;
+    uint16_t *pBuf = SevSegm (Num);
+    for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)
+    {
+      LED_Data [64 + i2disp] = *(pBuf + i2disp);
+    }
+    LED_Data [71] = 1;
+    uint16_t *pBuf2 = SevSegm (volt);
+    for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)
+    {
+      LED_Data [72 + i2disp] = *(pBuf2 + i2disp);
+    }
+  }
+}
 //
 
 
@@ -875,57 +895,49 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-          
-//		iDisp --;
-//		if (iDisp == 0)
-//		{
-//			if (iLED == 0)
-//			{
-//				HAL_ADC_PollForConversion(&hadc, 100);
-//			}
-//			else
-//			{
-#if IF_ADC
-          if (DispEncV > 0)
+          if (DispEncV >= Disp3s)
+          {
+            uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+            Mon4Seg(Enc_V / 4, 0);
+            DispEncV --;
+          }
+          else if (DispEncV > 0)
           {
             DispEncV --;
-            Mon4Seg (Enc_V,0);
           }
           else
           {
-            HAL_ADC_PollForConversion(&hadc, 100);
+//            HAL_ADC_PollForConversion(&hadc, 100);
             Mon4Seg(ADC_V,0);
           }
-
-          if (DispEncI > 0)
+          
+          
+          if (DispEncI >= Disp3s)
+          {
+            uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+            Mon4Seg (Enc_I / 4,32);
+            DispEncI --;
+          }
+          else if (DispEncI > 0)
           {
             DispEncI --;
-            Mon4Seg (Enc_I,32);
           }
           else
           {
-            HAL_ADC_PollForConversion(&hadc, 100);
+//            HAL_ADC_PollForConversion(&hadc, 100);
             Mon4Seg(ADC_I,32);
           }
-#endif
-#if IF_Disp
+
           if (iLED % 2 == 0)
           {
-                  HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
-                  HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
-//					HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - iLED) * (1 << iBit)]);
-//					iBit ++;
+            HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
           }
           else
           {
-                  HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
           }
 
-//				if (iBit >= 8)
-//				{
-//					iLED ++;
-//					iBit = 0;
-//				}
           iLED ++;
           if (iLED >= 2 * LED_Num)
           {
@@ -936,19 +948,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
                   HAL_TIM_Base_Stop_IT(&htim14);
           }
-#endif
-//			}
-//		}
-//		else if (EncoderSpeed < 10)
-//		{
-//			iDisp = Disp3s;
-//			iLED = 0;
-//		}
-//		else if (EncoderSpeed < 20)
-//		{
-//			iDisp = Disp3s;
-//			iLED = 0;
-//		}
+          Mon2Seg(ADC_I_USB);
 	}
 }
 

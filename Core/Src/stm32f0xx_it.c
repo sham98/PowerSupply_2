@@ -48,7 +48,11 @@ extern uint16_t indx;
 int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
 uint16_t oldpos_V = 0, oldpos_I = 0;
 extern uint16_t DispEncV, DispEncI;
-//extern uint16_t Enc_VV, Enc_II;
+extern uint16_t Disp3s;
+uint16_t Enc_V = 0, Enc_I = 0;
+extern uint16_t EncoderSpeed;
+extern uint16_t EncoderSpeedInc;
+extern uint16_t SampleTimeEncSpeed;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -135,48 +139,83 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 	indx ++;
 
-	if (indx >= 500)
+	if (indx >= SampleTimeEncSpeed)
 	{
-                indx = 0;
-		EncoderSpeed_V = ((Enc_V - oldpos_V) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_V > 50)
-		{
-                  __HAL_TIM_SET_COUNTER(&htim3,Enc_V + 500);
-                  oldpos_V = Enc_V + 500;
-                  DispEncV = Disp3s;
-		}
-		else if (EncoderSpeed_V < -50)
-		{
-                  __HAL_TIM_SET_COUNTER(&htim3,Enc_V - 500);
-                  oldpos_V = Enc_V - 500;
-                  DispEncV = Disp3s;
-		}
-                else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
-                {
-                  oldpos_V = Enc_V;                  
-                  DispEncV = Disp3s;
-                }
+          Enc_V	= __HAL_TIM_GET_COUNTER(&htim3);
+          Enc_I	= __HAL_TIM_GET_COUNTER(&htim1);
+
+          indx = 0;
+          EncoderSpeed_V = ((Enc_V - oldpos_V) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
+          if (EncoderSpeed_V > EncoderSpeed)
+          {
+            if(Enc_V + EncoderSpeedInc > htim3.Init.Period)
+            {
+              __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period);
+              oldpos_V = htim3.Init.Period;
+            }
+            else
+            {
+              __HAL_TIM_SET_COUNTER(&htim3,Enc_V + EncoderSpeedInc);
+              oldpos_V = Enc_V + EncoderSpeedInc;
+            }
+            DispEncV = Disp3s;
+          }
+          else if (EncoderSpeed_V < -EncoderSpeed)
+          {
+            if(Enc_V < EncoderSpeedInc)
+            {
+              __HAL_TIM_SET_COUNTER(&htim3, 0);
+              oldpos_V = 0;
+            }
+            else
+            {
+              __HAL_TIM_SET_COUNTER(&htim3,Enc_V - EncoderSpeedInc);
+              oldpos_V = Enc_V - EncoderSpeedInc;
+            }
+            DispEncV = Disp3s;
+          }
+          else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
+          {
+            oldpos_V = Enc_V;                  
+            DispEncV = Disp3s;
+          }
 
 
 
-		EncoderSpeed_I = ((Enc_I - oldpos_I) * 2);  // speed in clicks/sec
-		if (EncoderSpeed_I > 50)
-		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I + 500);
-                  oldpos_I = Enc_I + 500;
-                  DispEncI = Disp3s;
-		}
-		else if (EncoderSpeed_I < -50)
-		{
-                  __HAL_TIM_SET_COUNTER(&htim1,Enc_I - 500);
-                  oldpos_I = Enc_I - 100;
-                  DispEncI = Disp3s;
-		}
-                else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
-                {
-                  oldpos_I = Enc_I;
-                  DispEncI = Disp3s;
-                }
+          EncoderSpeed_I = ((Enc_I - oldpos_I) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
+          if (EncoderSpeed_I > EncoderSpeed)
+          {
+            if(Enc_I + EncoderSpeedInc > htim1.Init.Period)
+            {
+              __HAL_TIM_SET_COUNTER(&htim1, htim1.Init.Period);
+              oldpos_I = htim1.Init.Period;
+            }
+            else
+            {
+              __HAL_TIM_SET_COUNTER(&htim1,Enc_I + EncoderSpeedInc);
+              oldpos_I = Enc_I + EncoderSpeedInc;
+            }
+            DispEncI = Disp3s;
+          }
+          else if (EncoderSpeed_I < -EncoderSpeed)
+          {
+            if(Enc_I < EncoderSpeedInc)
+            {
+              __HAL_TIM_SET_COUNTER(&htim1, 0);
+              oldpos_I = 0;
+            }
+            else
+            {
+              __HAL_TIM_SET_COUNTER(&htim1,Enc_I - EncoderSpeedInc);
+              oldpos_I = Enc_I - EncoderSpeedInc;
+            }
+            DispEncV = Disp3s;
+          }
+          else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
+          {
+            oldpos_I = Enc_I;
+            DispEncI = Disp3s;
+          }
         }
 
   
