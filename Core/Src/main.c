@@ -60,6 +60,16 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t iBit = 0, LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
+uint8_t EXIS1Prs = 0;
+uint8_t EXIS2Prs = 0;
+uint8_t iEXIM1 = 0;
+uint8_t iEXIM2 = 0;
+uint8_t iEXIM3 = 0;
+uint8_t iEXIM4 = 0;
+uint8_t iEXIOVP = 0;
+uint8_t iEXIOCP = 0;
+uint8_t iEXISI = 0;
+uint8_t iEXISV = 0;
 uint16_t DispEncV = 0, DispEncI = 0;
 uint16_t Disp3s = 1000;
 uint16_t EncoderSpeed = 50;
@@ -666,17 +676,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EXI_OUT_Pin EXI_S1_Pin */
-  GPIO_InitStruct.Pin = EXI_OUT_Pin|EXI_S1_Pin;
+  /*Configure GPIO pin : EXI_OUT_Pin */
+  GPIO_InitStruct.Pin = EXI_OUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(EXI_OUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EXI_SVI_Pin EXI_S2_Pin */
-  GPIO_InitStruct.Pin = EXI_SVI_Pin|EXI_S2_Pin;
+  /*Configure GPIO pin : EXI_SVI_Pin */
+  GPIO_InitStruct.Pin = EXI_SVI_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(EXI_SVI_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : EXI_S2_Pin */
+  GPIO_InitStruct.Pin = EXI_S2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(EXI_S2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : EXI_S1_Pin */
+  GPIO_InitStruct.Pin = EXI_S1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(EXI_S1_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -890,7 +912,104 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
 //          HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+          if (EXIS1Prs == 1)
+          {
+            EXIS1Prs = 0;
+            if (iSelEXI == 0)                   //M3
+            {
+              iEXIM3 ++;
+              if (iEXIM3 == imaxnum;)
+              {
+                LED_Data [
+              }
+            }
+            else if (iSelEXI == 1)              //M2
+            {
+              iEXIM2 ++;
+              if (iEXIM2 == imaxnum;)
+              {
+                
+              }
+            }
+            else if (iSelEXI == 2)              //M1
+            {
+              iEXIM1 ++;
+              if (iEXIM1 == imaxnum;)
+              {
+                
+              }
+            }
+            else if (iSelEXI == 3)              //M4
+            {
+              iEXIM4 ++;
+              if (iEXIM4 == imaxnum;)
+              {
+                
+              }
+            }
+          }
+          else
+          {
+            if(iEXIM1 == exinum)
+            {
+              
+            }
+            if(iEXIM2 == exinum)
+            {
+              
+            }
+            if(iEXIM3 == exinum)
+            {
+              
+            }
+            if(iEXIM4 == exinum)
+            {
+              
+            }
+          }
+          
+          
+          
+          if (EXIS2Prs == 1)
+          {
+            EXIS2Prs = 0;
+            if (iSelEXI == 0)
+            {
+              
+            }
+            else if (iSelEXI == 1)
+            {
+              __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+            }
+            else if (iSelEXI == 2)
+            {
 
+            }
+            else if (iSelEXI == 3)
+            {
+              __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+            }
+          }
+          else
+          {
+            if(iEXIOCP == exinum)
+            {
+              
+            }
+            if(iEXIOVP == exinum)
+            {
+              
+            }
+            if(iEXISI == exinum)
+            {
+              
+            }
+            if(iEXISV == exinum)
+            {
+              
+            }
+          }
+  
           EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
           iSelEXI ++;
           if (iSelEXI >= 4)
@@ -974,16 +1093,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == GPIO_PIN_12)
+  if (GPIO_Pin == EXI_S1_Pin)
   {
-    if (O_S == )
-    {
-      __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
-    }
-    else if (O_S == )
-    {
-      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
-    }
+    EXIS1Prs = 1;
+  }
+  else if (GPIO_Pin == EXI_S2_Pin)
+  {
+    EXIS2Prs = 1;
   }
 }
 //
