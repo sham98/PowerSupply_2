@@ -59,6 +59,7 @@ TIM_HandleTypeDef htim17;
 /* USER CODE BEGIN PV */
 uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t iBit = 0, LED_Data [LED_Num] = {0};
+uint8_t iSelEXI = 0;
 uint16_t DispEncV = 0, DispEncI = 0;
 uint16_t Disp3s = 1000;
 uint16_t EncoderSpeed = 50;
@@ -888,7 +889,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-          HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+//          HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+
+          EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
+          iSelEXI ++;
+          if (iSelEXI >= 4)
+          {
+            iSelEXI = 0;
+            EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR & 0xF3FF;
+          }
+
+
+
+
           if (DispEncV >= Disp3s)
           {
             uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
@@ -959,20 +972,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //
 //
 //
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-//{
-//	if (GPIO_Pin == GPIO_PIN_12)
-//	{
-//		if (O_S == )
-//		{
-//		__HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
-//		}
-//		else if (O_S == )
-//		{
-//		__HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
-//		}
-//	}
-//}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == GPIO_PIN_12)
+  {
+    if (O_S == )
+    {
+      __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+    }
+    else if (O_S == )
+    {
+      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+    }
+  }
+}
 //
 
 
