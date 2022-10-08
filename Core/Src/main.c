@@ -63,6 +63,14 @@ uint8_t iBit = 0, LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
 uint8_t EXIS1Prs = 0;
 uint8_t EXIS2Prs = 0;
+uint8_t EXIS1PrePrs [4] = {0};
+uint8_t EXIS1PrvPrs [4] = {0};
+uint8_t EXIS2PrePrs [4] = {0};
+uint8_t EXIS2PrvPrs [4] = {0};
+uint8_t iPrsEXI [4] = {0};
+uint16_t iKepEXI = 1000;
+uint16_t iClkEXI = 100;
+
 uint8_t iEXIM1 = 0;
 uint8_t iEXIM2 = 0;
 uint8_t iEXIM3 = 0;
@@ -679,25 +687,19 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : EXI_OUT_Pin */
   GPIO_InitStruct.Pin = EXI_OUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EXI_OUT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EXI_SVI_Pin */
-  GPIO_InitStruct.Pin = EXI_SVI_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(EXI_SVI_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : EXI_S2_Pin */
   GPIO_InitStruct.Pin = EXI_S2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EXI_S2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : EXI_S1_Pin */
   GPIO_InitStruct.Pin = EXI_S1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EXI_S1_GPIO_Port, &GPIO_InitStruct);
 
@@ -913,6 +915,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);
+          if(EXIS1PrePrs [iSelEXI] == 1)
+          {
+            if (iPrsEXI [iSelEXI] == iKepEXI)
+            {
+              
+            }
+            else
+            {
+              iPrsEXI [iSelEXI] ++;
+            }
+          }
+          else
+          {
+            if ((iPrsEXI [iSelEXI] >= iClkEXI) & (iPrsEXI [iSelEXI] < iKepEXI))
+            {
+              
+            }
+            iPrsEXI [iSelEXI] = 0;
+          }
 //          if (EXIS1Prs == 1)
 //          {
 //            EXIS1Prs = 0;
@@ -1048,7 +1069,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           if (DispEncI >= Disp3s)
           {
             uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
-            Mon4Seg (Enc_I / 4,32);
+            Mon4Seg (Enc_I / 4, 32);
             DispEncI --;
           }
           else if (DispEncI > 0)
@@ -1074,12 +1095,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           iLED ++;
           if (iLED >= 2 * LED_Num)
           {
-                  iLED = 0;
-                  HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_SET);
-                  while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
-                  HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
+            iLED = 0;
+            HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_SET);
+            while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
+            HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
 
-                  HAL_TIM_Base_Stop_IT(&htim14);
+//            HAL_TIM_Base_Stop_IT(&htim14);
           }
           Mon2Seg(ADC_I_USB);
           HAL_TIM_Base_Start_IT(htim);
@@ -1103,11 +1124,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == EXI_S1_Pin)
   {
-    EXIS1Prs = 1;
+    EXIS1PrePrs [iSelEXI] = HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin);
   }
   else if (GPIO_Pin == EXI_S2_Pin)
   {
-    EXIS2Prs = 1;
+    EXIS2PrePrs [iSelEXI] = HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin);
   }
 }
 //

@@ -87,8 +87,6 @@ void Error_Handler(void);
 #define O_S2_GPIO_Port GPIOA
 #define O_S1_Pin GPIO_PIN_11
 #define O_S1_GPIO_Port GPIOA
-#define EXI_SVI_Pin GPIO_PIN_12
-#define EXI_SVI_GPIO_Port GPIOA
 #define EXI_S2_Pin GPIO_PIN_15
 #define EXI_S2_GPIO_Port GPIOA
 #define EXI_S1_Pin GPIO_PIN_3
