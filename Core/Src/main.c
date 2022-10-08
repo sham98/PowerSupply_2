@@ -37,6 +37,7 @@
 #define ADC_V           AData [0]
 #define ADC_I           AData [1]
 #define ADC_I_USB       AData [2]
+#define LEDM3Num        76
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -71,7 +72,7 @@ uint8_t iEXIOCP = 0;
 uint8_t iEXISI = 0;
 uint8_t iEXISV = 0;
 uint16_t DispEncV = 0, DispEncI = 0;
-uint16_t Disp3s = 1000;
+uint16_t Disp3s = 10000;
 uint16_t EncoderSpeed = 50;
 uint16_t EncoderSpeedInc = 500;
 uint16_t SampleTimeEncSpeed = 500;
@@ -106,12 +107,12 @@ Monitor Volt, Amp, USBAmp;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_DMA_Init(void);
 static void MX_TIM14_Init(void);
 static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
@@ -152,12 +153,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
   MX_TIM16_Init();
   MX_I2C1_Init();
-  MX_DMA_Init();
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
@@ -187,8 +188,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_TIM_Base_Start_IT(&htim14);
-    HAL_Delay(500);
+//    HAL_TIM_Base_Start_IT(&htim14);
+//    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -267,15 +268,15 @@ static void MX_ADC_Init(void)
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
-  hadc.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  hadc.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc.Init.LowPowerAutoWait = DISABLE;
   hadc.Init.LowPowerAutoPowerOff = DISABLE;
-  hadc.Init.ContinuousConvMode = DISABLE;
+  hadc.Init.ContinuousConvMode = ENABLE;
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = DISABLE;
-  hadc.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc.Init.DMAContinuousRequests = ENABLE;
+  hadc.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
     Error_Handler();
@@ -285,7 +286,7 @@ static void MX_ADC_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -911,104 +912,108 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-//          HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-          if (EXIS1Prs == 1)
-          {
-            EXIS1Prs = 0;
-            if (iSelEXI == 0)                   //M3
-            {
-              iEXIM3 ++;
-              if (iEXIM3 == imaxnum;)
-              {
-                LED_Data [
-              }
-            }
-            else if (iSelEXI == 1)              //M2
-            {
-              iEXIM2 ++;
-              if (iEXIM2 == imaxnum;)
-              {
-                
-              }
-            }
-            else if (iSelEXI == 2)              //M1
-            {
-              iEXIM1 ++;
-              if (iEXIM1 == imaxnum;)
-              {
-                
-              }
-            }
-            else if (iSelEXI == 3)              //M4
-            {
-              iEXIM4 ++;
-              if (iEXIM4 == imaxnum;)
-              {
-                
-              }
-            }
-          }
-          else
-          {
-            if(iEXIM1 == exinum)
-            {
-              
-            }
-            if(iEXIM2 == exinum)
-            {
-              
-            }
-            if(iEXIM3 == exinum)
-            {
-              
-            }
-            if(iEXIM4 == exinum)
-            {
-              
-            }
-          }
+          HAL_TIM_Base_Stop(htim);
+//          if (EXIS1Prs == 1)
+//          {
+//            EXIS1Prs = 0;
+//            if (iSelEXI == 0)                   //M3
+//            {
+//              iEXIM3 ++;
+//            }
+//            else if (iSelEXI == 1)              //M2
+//            {
+//              iEXIM2 ++;
+//              if (iEXIM2 == imaxnum)
+//              {
+//                
+//              }
+//            }
+//            else if (iSelEXI == 2)              //M1
+//            {
+//              iEXIM1 ++;
+//              if (iEXIM1 == imaxnum;)
+//              {
+//                
+//              }
+//            }
+//            else if (iSelEXI == 3)              //M4
+//            {
+//              iEXIM4 ++;
+//              if (iEXIM4 == imaxnum;)
+//              {
+//                
+//              }
+//            }
+//          }
+//          else
+//          {
+//            if(iEXIM1 == exinum)
+//            {
+//              
+//            }
+//            if(iEXIM2 == exinum)
+//            {
+//              
+//            }
+//            if(iEXIM3 == exinum)
+//            {
+//              if (iEXIM3 == OnePress)
+//              {
+//                LED_Data [LEDM3Num] = 1;
+//              }
+//              else if (iEXIM3 == KeepPress)
+//              {
+//                
+//              }
+//              
+//            }
+//            if(iEXIM4 == exinum)
+//            {
+//              
+//            }
+//          }
           
           
           
-          if (EXIS2Prs == 1)
-          {
-            EXIS2Prs = 0;
-            if (iSelEXI == 0)
-            {
-              
-            }
-            else if (iSelEXI == 1)
-            {
-              __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
-            }
-            else if (iSelEXI == 2)
-            {
-
-            }
-            else if (iSelEXI == 3)
-            {
-              __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
-            }
-          }
-          else
-          {
-            if(iEXIOCP == exinum)
-            {
-              
-            }
-            if(iEXIOVP == exinum)
-            {
-              
-            }
-            if(iEXISI == exinum)
-            {
-              
-            }
-            if(iEXISV == exinum)
-            {
-              
-            }
-          }
+//          if (EXIS2Prs == 1)
+//          {
+//            EXIS2Prs = 0;
+//            if (iSelEXI == 0)
+//            {
+//              
+//            }
+//            else if (iSelEXI == 1)
+//            {
+//              __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+//            }
+//            else if (iSelEXI == 2)
+//            {
+//
+//            }
+//            else if (iSelEXI == 3)
+//            {
+//              __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+//            }
+//          }
+//          else
+//          {
+//            if(iEXIOCP == exinum)
+//            {
+//              
+//            }
+//            if(iEXIOVP == exinum)
+//            {
+//              
+//            }
+//            if(iEXISI == exinum)
+//            {
+//              
+//            }
+//            if(iEXISV == exinum)
+//            {
+//              
+//            }
+//          }
   
           EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
           iSelEXI ++;
@@ -1033,6 +1038,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
+//            HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+//            HAL_ADC_Start(&hadc);
 //            HAL_ADC_PollForConversion(&hadc, 100);
             Mon4Seg(ADC_V,0);
           }
@@ -1075,6 +1082,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                   HAL_TIM_Base_Stop_IT(&htim14);
           }
           Mon2Seg(ADC_I_USB);
+          HAL_TIM_Base_Start_IT(htim);
 	}
 }
 
