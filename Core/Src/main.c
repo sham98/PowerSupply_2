@@ -37,7 +37,14 @@
 #define ADC_V           AData [0]
 #define ADC_I           AData [1]
 #define ADC_I_USB       AData [2]
+#define LEDM1Num        74
+#define LEDM2Num        75
 #define LEDM3Num        76
+#define LEDM4Num        77
+#define LEDOVPNum        78
+#define LEDOCPNum        79
+#define LEDLockNum        80
+#define LEDOUTNum        80
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -67,7 +74,8 @@ uint8_t EXIS1PrePrs [4] = {0};
 uint8_t EXIS1PrvPrs [4] = {0};
 uint8_t EXIS2PrePrs [4] = {0};
 uint8_t EXIS2PrvPrs [4] = {0};
-uint8_t iPrsEXI [4] = {0};
+uint16_t iPrsEXIS1 [4] = {0};
+uint16_t iPrsEXIS2 [4] = {0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 
@@ -703,6 +711,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EXI_S1_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -915,127 +933,129 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);
+
+/*
+ *
+ *      Extrnal Interrupt
+ *
+ */
+
+
+/*    S1  
+ *    start
+ */
           if(EXIS1PrePrs [iSelEXI] == 1)
           {
-            if (iPrsEXI [iSelEXI] == iKepEXI)
+            if (iPrsEXIS1 [iSelEXI] == iKepEXI)
             {
-              
+              if (iSelEXI == 0)
+              {
+                
+              }
+              else if (iSelEXI == 1)
+              {
+                
+              }
+              else if (iSelEXI == 2)
+              {
+                
+              }
+              else if (iSelEXI == 3)
+              {
+                
+              }              
             }
-            else
+            else if (iPrsEXIS1 [iSelEXI] <= iKepEXI)
             {
-              iPrsEXI [iSelEXI] ++;
+              iPrsEXIS1 [iSelEXI] ++;
             }
           }
           else
           {
-            if ((iPrsEXI [iSelEXI] >= iClkEXI) & (iPrsEXI [iSelEXI] < iKepEXI))
+            if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))
+            {
+              if (iSelEXI == 0)
+              {
+                LED_Data [LEDM1Num] = 0;
+                LED_Data [LEDM2Num] = 0;
+                LED_Data [LEDM3Num] = 1;
+                LED_Data [LEDM4Num] = 0;
+              }
+              else if (iSelEXI == 1)
+              {
+                LED_Data [LEDM1Num] = 0;
+                LED_Data [LEDM2Num] = 1;
+                LED_Data [LEDM3Num] = 0;
+                LED_Data [LEDM4Num] = 0;
+              }
+              else if (iSelEXI == 2)
+              {
+                LED_Data [LEDM1Num] = 1;
+                LED_Data [LEDM2Num] = 0;
+                LED_Data [LEDM3Num] = 0;
+                LED_Data [LEDM4Num] = 0;
+              }
+              else if (iSelEXI == 3)
+              {
+                LED_Data [LEDM1Num] = 0;
+                LED_Data [LEDM2Num] = 0;
+                LED_Data [LEDM3Num] = 0;
+                LED_Data [LEDM4Num] = 1;
+              }              
+            }
+            iPrsEXIS1 [iSelEXI] = 0;
+          }
+
+/*    S1  
+ *    end
+ */
+
+          
+          
+/*    S2  
+ *    start
+ */
+
+          if(EXIS2PrePrs [iSelEXI] == 1)
+          {
+            if (iPrsEXIS2 [iSelEXI] == iKepEXI)
+            {
+              if (iSelEXI == 0)
+              {
+                LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
+              }
+              else if (iSelEXI == 1)
+              {
+                LED_Data [LEDLockNum] = ~LED_Data [LEDLockNum];
+              }
+              else if (iSelEXI == 2)
+              {
+                LED_Data [LEDOCPNum] = ~LED_Data [LEDOCPNum];
+              }
+              else if (iSelEXI == 3)
+              {
+                
+              }              
+            }
+            else if (iPrsEXIS2 [iSelEXI] <= iKepEXI)
+            {
+              iPrsEXIS2 [iSelEXI] ++;
+            }
+          }
+          else
+          {
+            if ((iPrsEXIS2 [iSelEXI] >= iClkEXI) & (iPrsEXIS2 [iSelEXI] < iKepEXI))
             {
               
             }
-            iPrsEXI [iSelEXI] = 0;
+            iPrsEXIS2 [iSelEXI] = 0;
           }
-//          if (EXIS1Prs == 1)
-//          {
-//            EXIS1Prs = 0;
-//            if (iSelEXI == 0)                   //M3
-//            {
-//              iEXIM3 ++;
-//            }
-//            else if (iSelEXI == 1)              //M2
-//            {
-//              iEXIM2 ++;
-//              if (iEXIM2 == imaxnum)
-//              {
-//                
-//              }
-//            }
-//            else if (iSelEXI == 2)              //M1
-//            {
-//              iEXIM1 ++;
-//              if (iEXIM1 == imaxnum;)
-//              {
-//                
-//              }
-//            }
-//            else if (iSelEXI == 3)              //M4
-//            {
-//              iEXIM4 ++;
-//              if (iEXIM4 == imaxnum;)
-//              {
-//                
-//              }
-//            }
-//          }
-//          else
-//          {
-//            if(iEXIM1 == exinum)
-//            {
-//              
-//            }
-//            if(iEXIM2 == exinum)
-//            {
-//              
-//            }
-//            if(iEXIM3 == exinum)
-//            {
-//              if (iEXIM3 == OnePress)
-//              {
-//                LED_Data [LEDM3Num] = 1;
-//              }
-//              else if (iEXIM3 == KeepPress)
-//              {
-//                
-//              }
-//              
-//            }
-//            if(iEXIM4 == exinum)
-//            {
-//              
-//            }
-//          }
+
+/*    S2  
+ *    end
+ */
           
           
-          
-//          if (EXIS2Prs == 1)
-//          {
-//            EXIS2Prs = 0;
-//            if (iSelEXI == 0)
-//            {
-//              
-//            }
-//            else if (iSelEXI == 1)
-//            {
-//              __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
-//            }
-//            else if (iSelEXI == 2)
-//            {
-//
-//            }
-//            else if (iSelEXI == 3)
-//            {
-//              __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
-//            }
-//          }
-//          else
-//          {
-//            if(iEXIOCP == exinum)
-//            {
-//              
-//            }
-//            if(iEXIOVP == exinum)
-//            {
-//              
-//            }
-//            if(iEXISI == exinum)
-//            {
-//              
-//            }
-//            if(iEXISV == exinum)
-//            {
-//              
-//            }
-//          }
-  
           EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
           iSelEXI ++;
           if (iSelEXI >= 4)
@@ -1043,6 +1063,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             iSelEXI = 0;
             EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR & 0xF3FF;
           }
+  
+/******************************************************************************/
+
+
 
 
 

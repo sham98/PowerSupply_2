@@ -79,6 +79,7 @@ void Error_Handler(void);
 #define PWM_FAN_GPIO_Port GPIOB
 #define EXI_OUT_Pin GPIO_PIN_1
 #define EXI_OUT_GPIO_Port GPIOB
+#define EXI_OUT_EXTI_IRQn EXTI0_1_IRQn
 #define ENC_IB_Pin GPIO_PIN_8
 #define ENC_IB_GPIO_Port GPIOA
 #define ENC_IA_Pin GPIO_PIN_9
@@ -89,8 +90,10 @@ void Error_Handler(void);
 #define O_S1_GPIO_Port GPIOA
 #define EXI_S2_Pin GPIO_PIN_15
 #define EXI_S2_GPIO_Port GPIOA
+#define EXI_S2_EXTI_IRQn EXTI4_15_IRQn
 #define EXI_S1_Pin GPIO_PIN_3
 #define EXI_S1_GPIO_Port GPIOB
+#define EXI_S1_EXTI_IRQn EXTI2_3_IRQn
 #define ENC_VB_Pin GPIO_PIN_4
 #define ENC_VB_GPIO_Port GPIOB
 #define ENC_VA_Pin GPIO_PIN_5

@@ -22,13 +22,13 @@
     <StLinkDriver>
         <stlinkserialNo>WX</stlinkserialNo>
         <stlinkfoundProbes />
-        <stlinkResetStyle>4</stlinkResetStyle>
-        <stlinkResetStrategy>2</stlinkResetStrategy>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
+        <stlinkResetStyle>4</stlinkResetStyle>
+        <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>403790987</Checksum>
+        <Checksum>1777322539</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -44,11 +44,6 @@
     <CallStack>
         <ShowArgs>0</ShowArgs>
     </CallStack>
-    <LogFile>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ "$PROJ_DIR$\LogFile1.log"</LogFile>
-        <Category2>_ 2</Category2>
-    </LogFile>
     <watch_formats>
         <Fmt0>{W}42:LED_Data	0	4</Fmt0>
     </watch_formats>
@@ -60,6 +55,11 @@
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>
     </TermIOLog>
+    <LogFile>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ "$PROJ_DIR$\LogFile1.log"</LogFile>
+        <Category2>_ 2</Category2>
+    </LogFile>
     <DisassembleMode>
         <mode>0</mode>
     </DisassembleMode>
