@@ -1137,9 +1137,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 //  HAL_ADC_Start_DMA(hadc, (uint32_t*)AData, 3);
 //  HAL_ADC_PollForConversion(hadc, 100);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 3 * AData [0]);
-  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 3 * AData [1]);
-  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, 3 * AData [2]);
+//  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 3 * AData [0]);
+//  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 3 * AData [1]);
+//  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, 3 * AData [2]);
 }
 //
 //
