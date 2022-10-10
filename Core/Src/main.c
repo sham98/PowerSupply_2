@@ -825,7 +825,7 @@ uint16_t* SevSegm (uint8_t Num)
 void Mon4Seg (uint16_t volt, uint8_t Loc)
 {
   uint8_t Integer = volt / 100;         // Quotient of divide in 100 
-  if (Integer <= 9)                     // for remove zero before one digit numbers
+  if (Integer <= 9)                     // Locate Quotient in LED_Data and remove zero before one digit numbers
   {
     uint16_t *pBuf = SevSegm (Integer);
     for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
@@ -834,7 +834,7 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
       LED_Data [Loc + 8 + iInteger] = *(pBuf + iInteger);
     }
   }
-  else
+  else                                  // Locate Quotient in LED_Data
   {
     uint16_t * pBuf1 = SevSegm(Integer / 10);
     for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
@@ -847,9 +847,9 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
       LED_Data [Loc + 8 + iInteger] = *(pBuf2 + iInteger);
     }
   }
-  LED_Data [Loc + 15] = 1;
-  uint8_t Frac = volt % 100;
-  if (Frac == 0)
+  LED_Data [Loc + 15] = 1;              // Point
+  uint8_t Frac = volt % 100;            // Remainder of divide in 100
+  if (Frac == 0)                        // Locate Remainder in LED_Data and remove zero after one digits
   {
     uint16_t *pBuf = SevSegm (0);
     for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
@@ -858,7 +858,7 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
       LED_Data [Loc + 24 + iFrac] = 0;
     }
   }
-  else
+  else                                  // Locate Remainder in LED_Data
   {
     uint16_t * pBuf1 = SevSegm(Frac / 10);
     for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
@@ -883,15 +883,15 @@ void Mon2Seg (uint16_t volt)
 {
   for (uint8_t i = 0; i <= 1; i ++)
   {
-    uint16_t Num = volt % 10;
-    volt = volt / 10;
+    uint16_t Num = volt % 10;                           // Remainder of divide in 10
+    volt = volt / 10;                                   // Quotient of divide in 10
     uint16_t *pBuf = SevSegm (Num);
-    for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)
+    for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)     // Locate Remainder in LED_Data
     {
       LED_Data [64 + i2disp] = *(pBuf + i2disp);
     }
     LED_Data [71] = 1;
-    uint16_t *pBuf2 = SevSegm (volt);
+    uint16_t *pBuf2 = SevSegm (volt);                   // Locate Quotient in LED_Data
     for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)
     {
       LED_Data [72 + i2disp] = *(pBuf2 + i2disp);
@@ -912,7 +912,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim == &htim14)
 	{
-          HAL_TIM_Base_Stop(htim);
+          HAL_TIM_Base_Stop(htim);                      // Stop timing 
 
 /*
  *
@@ -924,33 +924,33 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*    S1  
  *    start
  */
-          if(EXIS1PrePrs [iSelEXI] == 0)
+          if(EXIS1PrePrs [iSelEXI] == 0)                // when S1 pin pressed (in iSelEXI status )
           {
-            if (iPrsEXIS1 [iSelEXI] == iKepEXI)
+            if (iPrsEXIS1 [iSelEXI] == iKepEXI)         // If time presses the button as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;
-              if (iSelEXI == 0)
+              iPrsEXIS1 [iSelEXI] ++;                   // to avoid run this if in next
+              if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
                 uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M3Page, OfsV, Enc_V);
                 uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M3Page, OfsI, Enc_I);
               }
-              else if (iSelEXI == 1)
+              else if (iSelEXI == 1)                    // if pin '1' -------->  M2
               {
                 uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M2Page, OfsV, Enc_V);
                 uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M2Page, OfsI, Enc_I);
               }
-              else if (iSelEXI == 2)
+              else if (iSelEXI == 2)                    // if pin '2' -------->  M1
               {
                 uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M1Page, OfsV, Enc_V);
                 uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M1Page, OfsI, Enc_I);
               }
-              else if (iSelEXI == 3)
+              else if (iSelEXI == 3)                    // if pin '3' -------->  M4
               {
                 uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M4Page, OfsV, Enc_V);
@@ -958,16 +958,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 EEPROM_Write_NUM(M4Page, OfsI, Enc_I);
               }              
             }
-            else if (iPrsEXIS1 [iSelEXI] <= iKepEXI)
+            else if (iPrsEXIS1 [iSelEXI] <= iKepEXI)    // If time presses the button not as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;
+              iPrsEXIS1 [iSelEXI] ++;                   // add time presses the button 
             }
           }
-          else
+          else                                          // the button not pressed or released
           {
-            if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))
+            if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              if (iSelEXI == 0)
+              if (iSelEXI == 0)                                                         // if pin '0' -------->  M3
               {
                 LED_Data [LEDM1Num] = 0;
                 LED_Data [LEDM2Num] = 0;
@@ -978,7 +978,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 uint16_t IPWM = EEPROM_Read_NUM(M3Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
-              else if (iSelEXI == 1)
+              else if (iSelEXI == 1)                                                    // if pin '1' -------->  M2
               {
                 LED_Data [LEDM1Num] = 0;
                 LED_Data [LEDM2Num] = 1;
@@ -989,7 +989,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
-              else if (iSelEXI == 2)
+              else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
               {
                 LED_Data [LEDM1Num] = 1;
                 LED_Data [LEDM2Num] = 0;
@@ -1000,7 +1000,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 uint16_t IPWM = EEPROM_Read_NUM(M1Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
-              else if (iSelEXI == 3)
+              else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
               {
                 LED_Data [LEDM1Num] = 0;
                 LED_Data [LEDM2Num] = 0;
@@ -1012,7 +1012,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
             }
-            iPrsEXIS1 [iSelEXI] = 0;
+            iPrsEXIS1 [iSelEXI] = 0;                                                    // if time presses the button not as long as that is to be clicked or kept or not, reset it
           }
 
 /*    S1  
