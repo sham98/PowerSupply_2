@@ -32,9 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//#define Enc_V	__HAL_TIM_GET_COUNTER(&htim1) / 4       //add in main.h
-//#define Enc_I	__HAL_TIM_GET_COUNTER(&htim3) / 4       //add in main.h
-#define LED_Num         96
+#define LED_Num         98
 #define ADC_V           AData [0]
 #define ADC_I           AData [1]
 #define ADC_I_USB       AData [2]
@@ -45,7 +43,8 @@
 #define LEDOVPNum       78
 #define LEDOCPNum       79
 #define LEDLockNum      80
-#define LEDOUTNum       80
+#define LEDOUTNum       81
+#define RelOutNum       85
 #define MAXReadEXI      100
 #define CorReadEXI      85
 #define M1Page          11
@@ -85,6 +84,8 @@ uint16_t iPrsEXIS1 [4] = {0};
 uint16_t iPrsEXIS2 [4] = {0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
+uint16_t Enc_V = 0;
+uint16_t Enc_I = 0;
 
 uint16_t DispEncV = 0, DispEncI = 0;
 uint16_t Disp3s = 10000;
@@ -931,30 +932,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iPrsEXIS1 [iSelEXI] ++;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
-                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M3Page, OfsV, Enc_V);
-                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M3Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 1)                    // if pin '1' -------->  M2
               {
-                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M2Page, OfsV, Enc_V);
-                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M2Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 2)                    // if pin '2' -------->  M1
               {
-                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M1Page, OfsV, Enc_V);
-                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M1Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  M4
               {
-                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                 EEPROM_Write_NUM(M4Page, OfsV, Enc_V);
-                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                 EEPROM_Write_NUM(M4Page, OfsI, Enc_I);
               }              
             }
@@ -1064,7 +1057,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               {
                 if (DispEncV > 0)                       // if it's still in display encoder
                 {
-                  uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                   __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
                 }
               }
@@ -1076,7 +1068,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               {
                 if (DispEncI > 0)                       // if it's still in display encoder
                 {
-                  uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
                 }
               }
@@ -1130,7 +1121,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *******************************************************************/
             if (DispEncV >= Disp3s)
             {
-              uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
               Mon4Seg(Enc_V / 4, 0);
               DispEncV --;
             }
@@ -1146,7 +1136,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             
             if (DispEncI >= Disp3s)
             {
-              uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
               Mon4Seg (Enc_I / 4, 32);
               DispEncI --;
             }
@@ -1183,6 +1172,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 
+
+
+/**
+  * @brief  Input Capture callback in non-blocking mode
+  * @param  htim TIM IC handle
+  * @retval None
+  */
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
   if (htim == &htim3)
@@ -1259,6 +1255,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     else if (ireadRESET >= CorReadEXI)
     {
       EXIS2PrePrs [iSelEXI] = 0;
+    }
+  }
+  else if (GPIO_Pin == EXI_OUT_Pin)
+  {
+    for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
+    {
+      if (HAL_GPIO_ReadPin(EXI_OUT_GPIO_Port, EXI_OUT_Pin) == 0)
+      {
+        ireadRESET ++;
+      }
+    }
+    if (ireadRESET >= CorReadEXI)
+    {
+      LED_Data [RelOutNum] = ~ LED_Data [RelOutNum];
     }
   }
 }

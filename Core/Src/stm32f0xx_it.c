@@ -51,7 +51,7 @@ int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
 uint16_t oldpos_V = 0, oldpos_I = 0;
 extern uint16_t DispEncV, DispEncI;
 extern uint16_t Disp3s;
-uint16_t Enc_V = 0, Enc_I = 0;
+extern uint16_t Enc_V, Enc_I;
 extern uint16_t MINEncoderSpeed;
 //extern uint16_t EncoderSpeedInc;
 extern uint16_t SampleTimeEncSpeed;
@@ -69,6 +69,8 @@ extern uint16_t SampleTimeEncSpeed;
 
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_adc;
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim14;
 /* USER CODE BEGIN EV */
 
@@ -143,9 +145,6 @@ void SysTick_Handler(void)
 
 	if (indx >= SampleTimeEncSpeed)
 	{
-          Enc_V	= __HAL_TIM_GET_COUNTER(&htim3);
-          Enc_I	= __HAL_TIM_GET_COUNTER(&htim1);
-
           indx = 0;
           EncoderSpeed_V = ((Enc_V - oldpos_V) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
           if (EncoderSpeed_V > MINEncoderSpeed)
@@ -301,6 +300,34 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
   /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM1 capture compare interrupt.
+  */
+void TIM1_CC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
+
+  /* USER CODE END TIM1_CC_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_CC_IRQn 1 */
+
+  /* USER CODE END TIM1_CC_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+
+  /* USER CODE END TIM3_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim3);
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
