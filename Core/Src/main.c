@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "EEPROM.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,10 +42,18 @@
 #define LEDM2Num        75
 #define LEDM3Num        76
 #define LEDM4Num        77
-#define LEDOVPNum        78
-#define LEDOCPNum        79
-#define LEDLockNum        80
-#define LEDOUTNum        80
+#define LEDOVPNum       78
+#define LEDOCPNum       79
+#define LEDLockNum      80
+#define LEDOUTNum       80
+#define MAXReadEXI      100
+#define CorReadEXI      85
+#define M1Page          11
+#define M2Page          22
+#define M3Page          33
+#define M4Page          44
+#define OfsV            0
+#define OfsI            1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -66,51 +75,21 @@ TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
 uint16_t AData[3], iLED = 0, indx = 0;
-uint8_t iBit = 0, LED_Data [LED_Num] = {0};
+uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
 uint8_t EXIS1Prs = 0;
 uint8_t EXIS2Prs = 0;
-uint8_t EXIS1PrePrs [4] = {0};
-uint8_t EXIS1PrvPrs [4] = {0};
-uint8_t EXIS2PrePrs [4] = {0};
-uint8_t EXIS2PrvPrs [4] = {0};
+uint8_t EXIS1PrePrs [4] = {1, 1, 1, 1};
+uint8_t EXIS2PrePrs [4] = {1, 1, 1, 1};
 uint16_t iPrsEXIS1 [4] = {0};
 uint16_t iPrsEXIS2 [4] = {0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 
-uint8_t iEXIM1 = 0;
-uint8_t iEXIM2 = 0;
-uint8_t iEXIM3 = 0;
-uint8_t iEXIM4 = 0;
-uint8_t iEXIOVP = 0;
-uint8_t iEXIOCP = 0;
-uint8_t iEXISI = 0;
-uint8_t iEXISV = 0;
 uint16_t DispEncV = 0, DispEncI = 0;
 uint16_t Disp3s = 10000;
-uint16_t EncoderSpeed = 50;
-uint16_t EncoderSpeedInc = 500;
+uint16_t MINEncoderSpeed = 10;
 uint16_t SampleTimeEncSpeed = 500;
-//uint16_t Enc_VV = 0, Enc_II = 0;
-//uint8_t * Buf [8];
-//typedef union
-//{
-//  struct
-//  {
-//    unsigned int A : 1;
-//    unsigned int B : 1;
-//    unsigned int C : 1;
-//    unsigned int D : 1;
-//    unsigned int E : 1;
-//    unsigned int F : 1;
-//    unsigned int G : 1;
-//    unsigned int DP : 1;
-//  }bit;
-//  unsigned int ShiftByte;
-//}ShiftLED;
-//
-//ShiftLED SSV1, SSV2, SSV3, SSV4, SSI1, SSI2, SSI3, SSI4, SSU1, SSU2, SSL1, SSL2;
 
 typedef struct
 {
@@ -185,27 +164,22 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);     // Fan PWM
+  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);    // Current PWM
+  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);    // Voltage PWM
 
-//  HAL_TIM_Base_Start_IT(&htim16);  // clock for shift register used in PWM above too
   HAL_TIM_Base_Start_IT(&htim14);
 
-//  #if IF_ADC
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-//  HAL_ADC_Start(&hadc);
-  //  #endif
-
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//    HAL_TIM_Base_Start_IT(&htim14);
-//    HAL_Delay(500);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -724,26 +698,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-////
 
-//void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
-//{
-//  if (htim == &htim3)
-//  {
-//    Enc_VV = __HAL_TIM_GET_COUNTER(htim) / 4;
-//  }
-//  else if (htim == &htim1)
-//  {
-//    Enc_II = __HAL_TIM_GET_COUNTER(htim) / 4;
-//  }
-//}
-
+/**
+  * @brief Get Number in input and convert it into 8 buffer to Display in 7segment.
+  * @param Num  Number from 0 to 9.
+  * @retval 8 buffer.
+  */
 uint16_t* SevSegm (uint8_t Num)
 {
   static uint16_t Buf [8];
   switch (Num)
   {
-  case 0:
+  case 0:                       // Number '0'
           Buf [0] = 0;
           Buf [1] = 1;
           Buf [2] = 1;
@@ -753,7 +719,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 1:
+  case 1:                       // Number '1'
           Buf [0] = 0;
           Buf [1] = 0;
           Buf [2] = 0;
@@ -763,7 +729,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 2:
+  case 2:                       // Number '2'
           Buf [0] = 1;
           Buf [1] = 1;
           Buf [2] = 0;
@@ -773,7 +739,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 3:
+  case 3:                       // Number '3'
           Buf [0] = 1;
           Buf [1] = 0;
           Buf [2] = 0;
@@ -783,7 +749,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 4:
+  case 4:                       // Number '4'
           Buf [0] = 1;
           Buf [1] = 0;
           Buf [2] = 1;
@@ -793,7 +759,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 5:
+  case 5:                       // Number '5'
           Buf [0] = 1;
           Buf [1] = 0;
           Buf [2] = 1;
@@ -803,7 +769,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 0;
           Buf [7] = 0;
           break;
-  case 6:
+  case 6:                       // Number '6'
           Buf [0] = 1;
           Buf [1] = 1;
           Buf [2] = 1;
@@ -813,7 +779,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 0;
           Buf [7] = 0;
           break;
-  case 7:
+  case 7:                       // Number '7'
           Buf [0] = 0;
           Buf [1] = 0;
           Buf [2] = 0;
@@ -823,7 +789,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 8:
+  case 8:                       // Number '8'
           Buf [0] = 1;
           Buf [1] = 1;
           Buf [2] = 1;
@@ -833,7 +799,7 @@ uint16_t* SevSegm (uint8_t Num)
           Buf [6] = 1;
           Buf [7] = 0;
           break;
-  case 9:
+  case 9:                       // Number '9'
           Buf [0] = 1;
           Buf [1] = 0;
           Buf [2] = 1;
@@ -846,12 +812,20 @@ uint16_t* SevSegm (uint8_t Num)
   }
   return Buf;
 }
-////
-////
+
+
+
+
+/**
+  * @brief Get Number in input and locate it into LED_Data array.
+  * @param volt  Number from 0 to 9999 that in display devide in 100.
+  * @param Loc  Location in LED_Data to put volt array
+  * @retval None.
+  */
 void Mon4Seg (uint16_t volt, uint8_t Loc)
 {
-  uint8_t Integer = volt / 100;
-  if (Integer <= 9)
+  uint8_t Integer = volt / 100;         // Quotient of divide in 100 
+  if (Integer <= 9)                     // for remove zero before one digit numbers
   {
     uint16_t *pBuf = SevSegm (Integer);
     for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
@@ -900,6 +874,11 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
 }
 
 
+/**
+  * @brief Get Number in input and locate it into LED_Data array.
+  * @param volt  Number from 0 to 99 that in display devide in 10.
+  * @retval None.
+  */
 void Mon2Seg (uint16_t volt)
 {
   for (uint8_t i = 0; i <= 1; i ++)
@@ -925,6 +904,7 @@ void Mon2Seg (uint16_t volt)
 
 /**
   * @brief  Period elapsed half complete callback in non-blocking mode
+  *         containing External Interrupt and display handling.
   * @param  htim TIM handle
   * @retval None
   */
@@ -944,25 +924,38 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*    S1  
  *    start
  */
-          if(EXIS1PrePrs [iSelEXI] == 1)
+          if(EXIS1PrePrs [iSelEXI] == 0)
           {
             if (iPrsEXIS1 [iSelEXI] == iKepEXI)
             {
+              iPrsEXIS1 [iSelEXI] ++;
               if (iSelEXI == 0)
               {
-                
+                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+                EEPROM_Write_NUM(M3Page, OfsV, Enc_V);
+                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+                EEPROM_Write_NUM(M3Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 1)
               {
-                
+                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+                EEPROM_Write_NUM(M2Page, OfsV, Enc_V);
+                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+                EEPROM_Write_NUM(M2Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 2)
               {
-                
+                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+                EEPROM_Write_NUM(M1Page, OfsV, Enc_V);
+                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+                EEPROM_Write_NUM(M1Page, OfsI, Enc_I);
               }
               else if (iSelEXI == 3)
               {
-                
+                uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+                EEPROM_Write_NUM(M4Page, OfsV, Enc_V);
+                uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+                EEPROM_Write_NUM(M4Page, OfsI, Enc_I);
               }              
             }
             else if (iPrsEXIS1 [iSelEXI] <= iKepEXI)
@@ -980,6 +973,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 1;
                 LED_Data [LEDM4Num] = 0;
+                uint16_t VPWM = EEPROM_Read_NUM(M3Page, OfsV);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                uint16_t IPWM = EEPROM_Read_NUM(M3Page, OfsI);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
               else if (iSelEXI == 1)
               {
@@ -987,6 +984,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM2Num] = 1;
                 LED_Data [LEDM3Num] = 0;
                 LED_Data [LEDM4Num] = 0;
+                uint16_t VPWM = EEPROM_Read_NUM(M2Page, OfsV);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
               else if (iSelEXI == 2)
               {
@@ -994,6 +995,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 0;
                 LED_Data [LEDM4Num] = 0;
+                uint16_t VPWM = EEPROM_Read_NUM(M1Page, OfsV);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                uint16_t IPWM = EEPROM_Read_NUM(M1Page, OfsI);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
               else if (iSelEXI == 3)
               {
@@ -1001,7 +1006,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 0;
                 LED_Data [LEDM4Num] = 1;
-              }              
+                uint16_t VPWM = EEPROM_Read_NUM(M4Page, OfsV);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                uint16_t IPWM = EEPROM_Read_NUM(M4Page, OfsI);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+              }
             }
             iPrsEXIS1 [iSelEXI] = 0;
           }
@@ -1016,10 +1025,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *    start
  */
 
-          if(EXIS2PrePrs [iSelEXI] == 1)
+          if(EXIS2PrePrs [iSelEXI] == 0)
           {
             if (iPrsEXIS2 [iSelEXI] == iKepEXI)
             {
+              iPrsEXIS1 [iSelEXI] ++;
               if (iSelEXI == 0)
               {
                 LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
@@ -1046,7 +1056,30 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           {
             if ((iPrsEXIS2 [iSelEXI] >= iClkEXI) & (iPrsEXIS2 [iSelEXI] < iKepEXI))
             {
-              
+              if (iSelEXI == 0)
+              {
+
+              }
+              else if (iSelEXI == 1)
+              {
+                if (DispEncV > 0)
+                {
+                  uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+                  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+                }
+              }
+              else if (iSelEXI == 2)
+              {
+
+              }
+              else if (iSelEXI == 3)
+              {
+                if (DispEncI > 0)
+                {
+                  uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+                  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+                }
+              }
             }
             iPrsEXIS2 [iSelEXI] = 0;
           }
@@ -1056,12 +1089,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  */
           
           
-          EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
-          iSelEXI ++;
           if (iSelEXI >= 4)
           {
             iSelEXI = 0;
             EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR & 0xF3FF;
+          }
+          else
+          {
+            iSelEXI ++;
+            EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
           }
   
 /******************************************************************************/
@@ -1070,51 +1106,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-
-          if (DispEncV >= Disp3s)
-          {
-            uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
-            Mon4Seg(Enc_V / 4, 0);
-            DispEncV --;
-          }
-          else if (DispEncV > 0)
-          {
-            DispEncV --;
-          }
-          else
-          {
-//            HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-//            HAL_ADC_Start(&hadc);
-//            HAL_ADC_PollForConversion(&hadc, 100);
-            Mon4Seg(ADC_V,0);
-          }
+/*
+ *
+ *      Shift Data Register
+ *
+ */
           
-          
-          if (DispEncI >= Disp3s)
-          {
-            uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
-            Mon4Seg (Enc_I / 4, 32);
-            DispEncI --;
-          }
-          else if (DispEncI > 0)
-          {
-            DispEncI --;
-          }
-          else
-          {
-//            HAL_ADC_PollForConversion(&hadc, 100);
-            Mon4Seg(ADC_I,32);
-          }
-
-          if (iLED % 2 == 0)
-          {
-            HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
-          }
-          else
-          {
-            HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
-          }
 
           iLED ++;
           if (iLED >= 2 * LED_Num)
@@ -1124,9 +1121,63 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             while (HAL_GPIO_ReadPin(O_RCK_GPIO_Port, O_RCK_Pin) == 0);
             HAL_GPIO_WritePin(O_RCK_GPIO_Port, O_RCK_Pin, GPIO_PIN_RESET);
 
-//            HAL_TIM_Base_Stop_IT(&htim14);
+
+            
+           /*******************************************************************
+           *
+           *      LED_Data buffer filling
+           *
+           *******************************************************************/
+            if (DispEncV >= Disp3s)
+            {
+              uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
+              Mon4Seg(Enc_V / 4, 0);
+              DispEncV --;
+            }
+            else if (DispEncV > 0)
+            {
+              DispEncV --;
+            }
+            else
+            {
+              Mon4Seg(ADC_V,0);
+            }
+            
+            
+            if (DispEncI >= Disp3s)
+            {
+              uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
+              Mon4Seg (Enc_I / 4, 32);
+              DispEncI --;
+            }
+            else if (DispEncI > 0)
+            {
+              DispEncI --;
+            }
+            else
+            {
+              Mon4Seg(ADC_I,32);
+            }
+
+            Mon2Seg(ADC_I_USB);
+
+            /******************************************************************/
           }
-          Mon2Seg(ADC_I_USB);
+          else
+          {
+            if (iLED % 2 == 0)
+            {
+              HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);
+              HAL_GPIO_WritePin(O_SER_GPIO_Port, O_SER_Pin, LED_Data[(LED_Num - 1 - iLED / 2)]);
+            }
+            else
+            {
+              HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_SET);
+            }
+          }
+
+/******************************************************************************/
+
           HAL_TIM_Base_Start_IT(htim);
 	}
 }
@@ -1135,27 +1186,64 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-//  HAL_ADC_Start_DMA(hadc, (uint32_t*)AData, 3);
-//  HAL_ADC_PollForConversion(hadc, 100);
-//  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 3 * AData [0]);
-//  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, 3 * AData [1]);
-//  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, 3 * AData [2]);
+
 }
-//
-//
-//
+
+
+/**
+  * @brief  EXTI line detection callback.
+  * @param  GPIO_Pin Specifies the port pin connected to corresponding EXTI line.
+  * @retval None
+  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+  uint8_t ireadSET = 0;
+  uint8_t ireadRESET = 0;
   if (GPIO_Pin == EXI_S1_Pin)
   {
-    EXIS1PrePrs [iSelEXI] = HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin);
+    for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
+    {
+      if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 1)
+      {
+        ireadSET ++;
+      }
+      else
+      {
+        ireadRESET ++;
+      }
+    }
+    if (ireadSET >= CorReadEXI)
+    {
+      EXIS1PrePrs [iSelEXI] = 1;
+    }
+    else if (ireadRESET >= CorReadEXI)
+    {
+      EXIS1PrePrs [iSelEXI] = 0;
+    }
   }
   else if (GPIO_Pin == EXI_S2_Pin)
   {
-    EXIS2PrePrs [iSelEXI] = HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin);
+    for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
+    {
+      if (HAL_GPIO_ReadPin(EXI_S2_GPIO_Port, EXI_S2_Pin) == 1)
+      {
+        ireadSET ++;
+      }
+      else
+      {
+        ireadRESET ++;
+      }
+    }
+    if (ireadSET >= CorReadEXI)
+    {
+      EXIS2PrePrs [iSelEXI] = 1;
+    }
+    else if (ireadRESET >= CorReadEXI)
+    {
+      EXIS2PrePrs [iSelEXI] = 0;
+    }
   }
 }
-//
 
 
 
