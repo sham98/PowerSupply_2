@@ -1025,63 +1025,63 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *    start
  */
 
-          if(EXIS2PrePrs [iSelEXI] == 0)
+          if(EXIS2PrePrs [iSelEXI] == 0)                // when S2 pin pressed (in iSelEXI status )
           {
-            if (iPrsEXIS2 [iSelEXI] == iKepEXI)
+            if (iPrsEXIS2 [iSelEXI] == iKepEXI)         // If time presses the button as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;
-              if (iSelEXI == 0)
+              iPrsEXIS1 [iSelEXI] ++;                   // to avoid run this if in next
+              if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
                 LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
               }
-              else if (iSelEXI == 1)
+              else if (iSelEXI == 1)                    // if pin '1' -------->  SV
               {
                 LED_Data [LEDLockNum] = ~LED_Data [LEDLockNum];
               }
-              else if (iSelEXI == 2)
+              else if (iSelEXI == 2)                    // if pin '2' -------->  OCP
               {
                 LED_Data [LEDOCPNum] = ~LED_Data [LEDOCPNum];
               }
-              else if (iSelEXI == 3)
+              else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
                 
               }              
             }
-            else if (iPrsEXIS2 [iSelEXI] <= iKepEXI)
+            else if (iPrsEXIS2 [iSelEXI] <= iKepEXI)    // If time presses the button not as long as that is to be kept
             {
-              iPrsEXIS2 [iSelEXI] ++;
+              iPrsEXIS2 [iSelEXI] ++;                   // add time presses the button 
             }
           }
-          else
+          else                                          // the button not pressed or released
           {
-            if ((iPrsEXIS2 [iSelEXI] >= iClkEXI) & (iPrsEXIS2 [iSelEXI] < iKepEXI))
+            if ((iPrsEXIS2 [iSelEXI] >= iClkEXI) & (iPrsEXIS2 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              if (iSelEXI == 0)
+              if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
 
               }
-              else if (iSelEXI == 1)
+              else if (iSelEXI == 1)                    // if pin '1' -------->  SV
               {
-                if (DispEncV > 0)
+                if (DispEncV > 0)                       // if it's still in display encoder
                 {
                   uint16_t Enc_V = __HAL_TIM_GET_COUNTER(&htim3);
                   __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
                 }
               }
-              else if (iSelEXI == 2)
+              else if (iSelEXI == 2)                    // if pin '2' -------->  OCP
               {
 
               }
-              else if (iSelEXI == 3)
+              else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
-                if (DispEncI > 0)
+                if (DispEncI > 0)                       // if it's still in display encoder
                 {
                   uint16_t Enc_I = __HAL_TIM_GET_COUNTER(&htim1);
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
                 }
               }
             }
-            iPrsEXIS2 [iSelEXI] = 0;
+            iPrsEXIS2 [iSelEXI] = 0;                   // if time presses the button not as long as that is to be clicked or kept or not, reset it
           }
 
 /*    S2  
@@ -1089,7 +1089,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  */
           
           
-          if (iSelEXI >= 4)
+          if (iSelEXI >= 4)                             // change S pins
           {
             iSelEXI = 0;
             EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR & 0xF3FF;
@@ -1184,6 +1184,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
+/**
+  * @brief  Conversion complete callback in non blocking mode 
+  * @param  hadc ADC handle
+  * @retval None
+  */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
 
