@@ -1183,6 +1183,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 
+void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
+{
+  if (htim == &htim3)
+  {
+    Enc_V = __HAL_TIM_GET_COUNTER(htim);
+  }
+  else if (htim == &htim1)
+  {
+    Enc_I = __HAL_TIM_GET_COUNTER(htim);
+  }
+}
+
+
 
 /**
   * @brief  Conversion complete callback in non blocking mode 
