@@ -76,12 +76,12 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0, indx = 0;
 uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
-uint8_t EXIS1Prs = 0;
-uint8_t EXIS2Prs = 0;
-uint8_t EXIS1PrePrs [4] = {1, 1, 1, 1};
-uint8_t EXIS2PrePrs [4] = {1, 1, 1, 1};
-uint16_t iPrsEXIS1 [4] = {0};
-uint16_t iPrsEXIS2 [4] = {0};
+uint8_t EXIS1PrePrs [4] = {0};
+uint8_t EXIS2PrePrs [4] = {0};
+uint8_t EXIS1PrvPrs [4] = {0};
+uint8_t EXIS2PrvPrs [4] = {0};
+uint16_t iPrsEXIS1 [4] = {0,0,0,0};
+uint16_t iPrsEXIS2 [4] = {0,0,0,0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 uint16_t Enc_V = 0;
@@ -668,23 +668,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : EXI_OUT_Pin */
-  GPIO_InitStruct.Pin = EXI_OUT_Pin;
+  /*Configure GPIO pins : EXI_OUT_Pin EXI_S1_Pin */
+  GPIO_InitStruct.Pin = EXI_OUT_Pin|EXI_S1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(EXI_OUT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : EXI_S2_Pin */
   GPIO_InitStruct.Pin = EXI_S2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(EXI_S2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : EXI_S1_Pin */
-  GPIO_InitStruct.Pin = EXI_S1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(EXI_S1_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
@@ -925,11 +919,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*    S1  
  *    start
  */
-          if(EXIS1PrePrs [iSelEXI] == 0)                // when S1 pin pressed (in iSelEXI status )
+          if(EXIS1PrePrs [iSelEXI] == 1)                // when S1 pin pressed (in iSelEXI status )
           {
-            if (iPrsEXIS1 [iSelEXI] == iKepEXI)         // If time presses the button as long as that is to be kept
+            if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)    // If time presses the button not as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;                   // to avoid run this if in next
+              iPrsEXIS1 [iSelEXI] ++;                   // add time presses the button 
+            }
+            else if (iPrsEXIS1 [iSelEXI] >= iKepEXI)         // If time presses the button as long as that is to be kept
+            {
+              EXIS1PrePrs [iSelEXI] = 0;
+              iPrsEXIS1 [iSelEXI] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
                 EEPROM_Write_NUM(M3Page, OfsV, Enc_V);
@@ -951,15 +950,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 EEPROM_Write_NUM(M4Page, OfsI, Enc_I);
               }              
             }
-            else if (iPrsEXIS1 [iSelEXI] <= iKepEXI)    // If time presses the button not as long as that is to be kept
+            else if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              iPrsEXIS1 [iSelEXI] ++;                   // add time presses the button 
-            }
-          }
-          else                                          // the button not pressed or released
-          {
-            if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
-            {
+              EXIS1PrePrs [iSelEXI] = 0;
+              iPrsEXIS1 [iSelEXI] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                                                         // if pin '0' -------->  M3
               {
                 LED_Data [LEDM1Num] = 0;
@@ -1005,7 +999,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
             }
-            iPrsEXIS1 [iSelEXI] = 0;                                                    // if time presses the button not as long as that is to be clicked or kept or not, reset it
+            else
+            {
+              EXIS1PrePrs [iSelEXI] = 0;
+            }
           }
 
 /*    S1  
@@ -1022,7 +1019,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           {
             if (iPrsEXIS2 [iSelEXI] == iKepEXI)         // If time presses the button as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;                   // to avoid run this if in next
+              iPrsEXIS2 [iSelEXI] ++;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
                 LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
@@ -1080,15 +1077,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  */
           
           
-          if (iSelEXI >= 4)                             // change S pins
+          if (iSelEXI >= 3)                             // change S pins
           {
             iSelEXI = 0;
-            EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR & 0xF3FF;
+            O_S1_GPIO_Port -> ODR = O_S1_GPIO_Port -> ODR & 0xF3FF;
           }
           else
           {
             iSelEXI ++;
-            EXI_S1_GPIO_Port -> ODR = EXI_S1_GPIO_Port -> ODR + 1024;
+            O_S1_GPIO_Port -> ODR = O_S1_GPIO_Port -> ODR + 1024;
           }
   
 /******************************************************************************/
@@ -1211,50 +1208,33 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  uint8_t ireadSET = 0;
   uint8_t ireadRESET = 0;
   if (GPIO_Pin == EXI_S1_Pin)
   {
     for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
     {
-      if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 1)
-      {
-        ireadSET ++;
-      }
-      else
+      if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)
       {
         ireadRESET ++;
       }
     }
-    if (ireadSET >= CorReadEXI)
+    if (ireadRESET >= CorReadEXI)
     {
       EXIS1PrePrs [iSelEXI] = 1;
-    }
-    else if (ireadRESET >= CorReadEXI)
-    {
-      EXIS1PrePrs [iSelEXI] = 0;
     }
   }
   else if (GPIO_Pin == EXI_S2_Pin)
   {
     for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
     {
-      if (HAL_GPIO_ReadPin(EXI_S2_GPIO_Port, EXI_S2_Pin) == 1)
-      {
-        ireadSET ++;
-      }
-      else
+      if (HAL_GPIO_ReadPin(EXI_S2_GPIO_Port, EXI_S2_Pin) == 0)
       {
         ireadRESET ++;
       }
     }
-    if (ireadSET >= CorReadEXI)
+    if (ireadRESET >= CorReadEXI)
     {
       EXIS2PrePrs [iSelEXI] = 1;
-    }
-    else if (ireadRESET >= CorReadEXI)
-    {
-      EXIS2PrePrs [iSelEXI] = 0;
     }
   }
   else if (GPIO_Pin == EXI_OUT_Pin)

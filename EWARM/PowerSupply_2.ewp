@@ -368,7 +368,7 @@
         </option>
         <option>
           <name>CCOptLevel</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCOptStrategy</name>
@@ -377,7 +377,7 @@
         </option>
         <option>
           <name>CCOptLevelSlave</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCPosIndRopi</name>
@@ -668,7 +668,7 @@
       <data>
         <extensions></extensions>
         <cmdline></cmdline>
-        <hasPrio>0</hasPrio>
+        <hasPrio>192</hasPrio>
         <buildSequence>inputOutputBased</buildSequence>
       </data>
     </settings>

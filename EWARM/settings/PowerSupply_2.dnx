@@ -16,8 +16,8 @@
         <MemConfigValue>C:\Program Files\IAR Systems\Embedded Workbench 9.1\arm\CONFIG\debugger\ST\STM32F030K6.ddf</MemConfigValue>
     </PlDriver>
     <ArmDriver>
-        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
         <EnableCache>0</EnableCache>
+        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
     </ArmDriver>
     <StLinkDriver>
         <stlinkserialNo>WX</stlinkserialNo>
@@ -28,7 +28,7 @@
         <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>1300150239</Checksum>
+        <Checksum>2029210183</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -64,7 +64,9 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Count>0</Count>
+        <Bp0>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Src\main.c}.976.26" 0 0 1 "" 0 "" 0</Bp0>
+        <Bp1>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Src\main.c}.1185.8" 0 0 1 "" 0 "" 0</Bp1>
+        <Count>2</Count>
     </Breakpoints2>
     <Aliases>
         <Count>0</Count>
