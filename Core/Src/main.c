@@ -53,6 +53,9 @@
 #define M4Page          44
 #define OfsV            0
 #define OfsI            1
+#define VolLoc            32
+#define CurLoc            0
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -88,16 +91,23 @@ uint16_t Enc_V = 0;
 uint16_t Enc_I = 0;
 
 uint16_t DispEncV = 0, DispEncI = 0;
-uint16_t Disp3s = 10000;
+uint16_t Disp3s = 20;
 uint16_t MINEncoderSpeed = 10;
 uint16_t SampleTimeEncSpeed = 500;
 
+
+
+enum
+{
+  Nor,
+  OC
+};
 typedef struct
 {
 	uint16_t Volt;
-	float KRes;
+	uint8_t Status;
 }Monitor;
-Monitor Volt, Amp, USBAmp;
+Monitor Volt, Curr, USBCurr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -158,14 +168,11 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  Volt.KRes = 0.266;
-  Amp.KRes = 0.65;
-  USBAmp.KRes = 0.6;
 
-  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);     // Fan PWM
+//  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);     // Fan PWM
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);    // Current PWM
   HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);    // Voltage PWM
 
@@ -1031,15 +1038,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
+                Volt.Status = (Volt.Status == Nor) ? OC : Nor;
                 LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
               }
-              else if (iSelEXI == 1)                    // if pin '1' -------->  SV
+              else if (iSelEXI == 1)                    // if pin '2' -------->  OCP
+              {
+                Curr.Status = (Curr.Status == Nor) ? OC : Nor;
+                LED_Data [LEDOCPNum] = ~LED_Data [LEDOCPNum];
+              }
+              else if (iSelEXI == 2)                    // if pin '1' -------->  SV
               {
                 LED_Data [LEDLockNum] = ~LED_Data [LEDLockNum];
-              }
-              else if (iSelEXI == 2)                    // if pin '2' -------->  OCP
-              {
-                LED_Data [LEDOCPNum] = ~LED_Data [LEDOCPNum];
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
@@ -1056,7 +1065,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 1)                    // if pin '1' -------->  SV
               {
-                if (DispEncV > 0)                       // if it's still in display encoder
+                if ((DispEncV > 0) | (Volt.Status == OC))                       // if it's still in display encoder
                 {
                   __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
                 }
@@ -1067,7 +1076,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
-                if (DispEncI > 0)                       // if it's still in display encoder
+                if ((DispEncI > 0) | (Curr.Status == OC))                       // if it's still in display encoder
                 {
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
                 }
@@ -1127,34 +1136,35 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *      LED_Data buffer filling
            *
            *******************************************************************/
-            if (DispEncV >= Disp3s)
+            if ((Volt.Status == Nor) | (DispEncV == 0))
             {
-              Mon4Seg(Enc_V / 4, 0);
+              Mon4Seg(ADC_V,VolLoc);
+            }
+            else if (DispEncV >= Disp3s)
+            {
+              Mon4Seg(Enc_V / 4, VolLoc);
               DispEncV --;
             }
             else if (DispEncV > 0)
             {
               DispEncV --;
             }
-            else
+            
+            
+            if ((Curr.Status == Nor) | (DispEncI == 0))
             {
-              Mon4Seg(ADC_V,0);
+              Mon4Seg(ADC_I,CurLoc);
             }
-            
-            
-            if (DispEncI >= Disp3s)
+            else if (DispEncI >= Disp3s)
             {
-              Mon4Seg (Enc_I / 4, 32);
+              Mon4Seg (Enc_I / 4, CurLoc);
               DispEncI --;
             }
             else if (DispEncI > 0)
             {
               DispEncI --;
             }
-            else
-            {
-              Mon4Seg(ADC_I,32);
-            }
+            
 
             Mon2Seg(ADC_I_USB);
 
