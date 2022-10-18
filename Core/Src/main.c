@@ -36,15 +36,15 @@
 #define ADC_V           AData [0]
 #define ADC_I           AData [1]
 #define ADC_I_USB       AData [2]
-#define LEDM1Num        74
-#define LEDM2Num        75
-#define LEDM3Num        76
-#define LEDM4Num        77
-#define LEDOVPNum       78
-#define LEDOCPNum       79
-#define LEDLockNum      80
-#define LEDOUTNum       81
-#define RelOutNum       85
+#define LEDM1Num        81
+#define LEDM2Num        82
+#define LEDM3Num        83
+#define LEDM4Num        84
+#define LEDOVPNum       85
+#define LEDOCPNum       86
+#define LEDLockNum      87
+#define LEDOUTNum       88
+#define RelOutNum       89
 #define MAXReadEXI      100
 #define CorReadEXI      85
 #define M1Page          11
@@ -80,8 +80,8 @@ uint8_t EXIS1PrePrs [4] = {0};
 uint8_t EXIS2PrePrs [4] = {0};
 uint8_t EXIS1PrvPrs [4] = {0};
 uint8_t EXIS2PrvPrs [4] = {0};
-uint16_t iPrsEXIS1 [4] = {0,0,0,0};
-uint16_t iPrsEXIS2 [4] = {0,0,0,0};
+uint16_t iEXIS1Prs [5] = {0,0,0,0};
+uint16_t iPrsEXIS2 [5] = {0,0,0,0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 uint16_t Enc_V = 0;
@@ -631,7 +631,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
@@ -681,13 +681,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(EXI_S2_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
@@ -923,12 +923,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           {
             if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)    // If time presses the button not as long as that is to be kept
             {
-              iPrsEXIS1 [iSelEXI] ++;                   // add time presses the button 
+              iEXIS1Prs [iSelEXI + 1] ++;                   // add time presses the button 
             }
-            else if (iPrsEXIS1 [iSelEXI] >= iKepEXI)         // If time presses the button as long as that is to be kept
+            else if (iEXIS1Prs [iSelEXI + 1] >= iKepEXI)         // If time presses the button as long as that is to be kept
             {
               EXIS1PrePrs [iSelEXI] = 0;
-              iPrsEXIS1 [iSelEXI] = 0;                   // to avoid run this if in next
+              iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
                 EEPROM_Write_NUM(M3Page, OfsV, Enc_V);
@@ -950,10 +950,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 EEPROM_Write_NUM(M4Page, OfsI, Enc_I);
               }              
             }
-            else if ((iPrsEXIS1 [iSelEXI] >= iClkEXI) & (iPrsEXIS1 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
+            else if ((iEXIS1Prs [iSelEXI + 1] >= iClkEXI) & (iEXIS1Prs [iSelEXI + 1] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
               EXIS1PrePrs [iSelEXI] = 0;
-              iPrsEXIS1 [iSelEXI] = 0;                   // to avoid run this if in next
+              iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                                                         // if pin '0' -------->  M3
               {
                 LED_Data [LEDM1Num] = 0;
@@ -967,17 +967,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 1)                                                    // if pin '1' -------->  M2
               {
-                LED_Data [LEDM1Num] = 0;
-                LED_Data [LEDM2Num] = 1;
-                LED_Data [LEDM3Num] = 0;
-                LED_Data [LEDM4Num] = 0;
-                uint16_t VPWM = EEPROM_Read_NUM(M2Page, OfsV);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
-                uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
-              }
-              else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
-              {
                 LED_Data [LEDM1Num] = 1;
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 0;
@@ -985,6 +974,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 uint16_t VPWM = EEPROM_Read_NUM(M1Page, OfsV);
                 __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
                 uint16_t IPWM = EEPROM_Read_NUM(M1Page, OfsI);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+              }
+              else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
+              {
+                LED_Data [LEDM1Num] = 0;
+                LED_Data [LEDM2Num] = 1;
+                LED_Data [LEDM3Num] = 0;
+                LED_Data [LEDM4Num] = 0;
+                uint16_t VPWM = EEPROM_Read_NUM(M2Page, OfsV);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
               }
               else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
@@ -1004,6 +1004,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               EXIS1PrePrs [iSelEXI] = 0;
             }
           }
+          else
+          {
+            iEXIS1Prs [iSelEXI + 1] = 0;
+          }
 
 /*    S1  
  *    end
@@ -1015,11 +1019,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *    start
  */
 
-          if(EXIS2PrePrs [iSelEXI] == 0)                // when S2 pin pressed (in iSelEXI status )
+          if(EXIS2PrePrs [iSelEXI] == 1)                // when S2 pin pressed (in iSelEXI status )
           {
-            if (iPrsEXIS2 [iSelEXI] == iKepEXI)         // If time presses the button as long as that is to be kept
+            if (HAL_GPIO_ReadPin(EXI_S2_GPIO_Port, EXI_S2_Pin) == 0)
             {
-              iPrsEXIS2 [iSelEXI] ++;                   // to avoid run this if in next
+              iPrsEXIS2 [iSelEXI + 1] ++;                   // add time presses the button 
+            }
+            else if (iPrsEXIS2 [iSelEXI + 1] >= iKepEXI)         // If time presses the button as long as that is to be kept
+            {
+              EXIS2PrePrs [iSelEXI] = 0;
+              iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
                 LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
@@ -1037,15 +1046,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 
               }              
             }
-            else if (iPrsEXIS2 [iSelEXI] <= iKepEXI)    // If time presses the button not as long as that is to be kept
+            else if ((iPrsEXIS2 [iSelEXI + 1] >= iClkEXI) & (iPrsEXIS2 [iSelEXI + 1] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              iPrsEXIS2 [iSelEXI] ++;                   // add time presses the button 
-            }
-          }
-          else                                          // the button not pressed or released
-          {
-            if ((iPrsEXIS2 [iSelEXI] >= iClkEXI) & (iPrsEXIS2 [iSelEXI] < iKepEXI))     // if time presses the button as long as that is to be clicked
-            {
+              EXIS2PrePrs [iSelEXI] = 0;
+              iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
 
@@ -1068,10 +1072,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
                 }
               }
+              else
+              {
+                EXIS2PrePrs [iSelEXI] = 0;
+              }
             }
-            iPrsEXIS2 [iSelEXI] = 0;                   // if time presses the button not as long as that is to be clicked or kept or not, reset it
           }
-
+          else
+          {
+            iPrsEXIS2 [iSelEXI + 1] = 0;                   // if time presses the button not as long as that is to be clicked or kept or not, reset it
+          }
+          
 /*    S2  
  *    end
  */
