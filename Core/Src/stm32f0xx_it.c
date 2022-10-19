@@ -154,14 +154,14 @@ void SysTick_Handler(void)
               __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period);
               Enc_V = htim3.Init.Period;
               oldpos_V = htim3.Init.Period;
-              htim17.Instance -> CCR1 = htim3.Init.Period;
+//              htim17.Instance -> CCR1 = htim3.Init.Period;
             }
             else
             {
               __HAL_TIM_SET_COUNTER(&htim3,Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
               oldpos_V = Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
               Enc_V = oldpos_V;
-              htim17.Instance -> CCR1 = Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
+//              htim17.Instance -> CCR1 = Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
             }
             DispEncV = Disp3s;
           }
@@ -170,14 +170,14 @@ void SysTick_Handler(void)
             if(Enc_V < (1000 / SampleTimeEncSpeed) * EncoderSpeed_V)
             {
               __HAL_TIM_SET_COUNTER(&htim3, 0);
-              htim17.Instance -> CCR1 = 0;
+//              htim17.Instance -> CCR1 = 0;
               Enc_V = 0;
               oldpos_V = 0;
             }
             else
             {
               __HAL_TIM_SET_COUNTER(&htim3,Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
-              htim17.Instance -> CCR1 = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
+//              htim17.Instance -> CCR1 = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
               oldpos_V = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
               Enc_V = oldpos_V;
             }
@@ -186,7 +186,7 @@ void SysTick_Handler(void)
           else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
           {
             oldpos_V = Enc_V;
-            htim17.Instance -> CCR1 = Enc_V;
+//            htim17.Instance -> CCR1 = Enc_V;
             DispEncV = Disp3s;
           }
 
@@ -198,14 +198,16 @@ void SysTick_Handler(void)
             if(Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I > htim1.Init.Period)
             {
               __HAL_TIM_SET_COUNTER(&htim1, htim1.Init.Period);
-              htim16.Instance -> CCR1 = htim1.Init.Period;
+//              htim16.Instance -> CCR1 = htim1.Init.Period;
               oldpos_I = htim1.Init.Period;
+              Enc_I = oldpos_I;
             }
             else
             {
               __HAL_TIM_SET_COUNTER(&htim1,Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-              htim16.Instance -> CCR1 = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+//              htim16.Instance -> CCR1 = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
               oldpos_I = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+              Enc_I = oldpos_I;
             }
             DispEncI = Disp3s;
           }
@@ -214,20 +216,22 @@ void SysTick_Handler(void)
             if(Enc_I < (1000 / SampleTimeEncSpeed) * EncoderSpeed_I)
             {
               __HAL_TIM_SET_COUNTER(&htim1, 0);
-              htim16.Instance -> CCR1 = 0;
+//              htim16.Instance -> CCR1 = 0;
               oldpos_I = 0;
+              Enc_I = 0;
             }
             else
             {
               __HAL_TIM_SET_COUNTER(&htim1,Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-              htim16.Instance -> CCR1 = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+//              htim16.Instance -> CCR1 = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
               oldpos_I = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+              Enc_I = oldpos_I;
             }
-            DispEncV = Disp3s;
+            DispEncI = Disp3s;
           }
           else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
           {
-            htim16.Instance -> CCR1 = Enc_I;
+//            htim16.Instance -> CCR1 = Enc_I;
             oldpos_I = Enc_I;
             DispEncI = Disp3s;
           }

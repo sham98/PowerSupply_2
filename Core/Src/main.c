@@ -102,12 +102,21 @@ enum
   Nor,
   OC
 };
+
 typedef struct
 {
 	uint16_t Volt;
 	uint8_t Status;
 }Monitor;
 Monitor Volt, Curr, USBCurr;
+
+struct
+{
+	uint16_t Volt;
+	uint16_t Curr;
+        uint8_t  Out;
+}VoCu;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -380,7 +389,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim1.Init.Period = 16384;
+  htim1.Init.Period = 12800;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -431,7 +440,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim3.Init.Period = 16384;
+  htim3.Init.Period = 12800;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -524,7 +533,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 0;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 16384;
+  htim16.Init.Period = 12800;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -586,7 +595,7 @@ static void MX_TIM17_Init(void)
   htim17.Instance = TIM17;
   htim17.Init.Prescaler = 0;
   htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 16384;
+  htim17.Init.Period = 12800;
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -885,15 +894,15 @@ void Mon2Seg (uint16_t volt)
 {
   for (uint8_t i = 0; i <= 1; i ++)
   {
-    uint16_t Num = volt % 10;                           // Remainder of divide in 10
-    volt = volt / 10;                                   // Quotient of divide in 10
-    uint16_t *pBuf = SevSegm (Num);
+//    uint16_t Num = volt % 10;                           // Remainder of divide in 10
+//    volt = volt / 10;                                   // Quotient of divide in 10
+    uint16_t *pBuf = SevSegm (volt / 10);
     for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)     // Locate Remainder in LED_Data
     {
       LED_Data [64 + i2disp] = *(pBuf + i2disp);
     }
     LED_Data [71] = 1;
-    uint16_t *pBuf2 = SevSegm (volt);                   // Locate Quotient in LED_Data
+    uint16_t *pBuf2 = SevSegm (volt % 10);                   // Locate Quotient in LED_Data
     for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)
     {
       LED_Data [72 + i2disp] = *(pBuf2 + i2disp);
@@ -1065,9 +1074,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 1)                    // if pin '1' -------->  SV
               {
-                if ((DispEncV > 0) | (Volt.Status == OC))                       // if it's still in display encoder
+                if ((DispEncV > 0) & (Volt.Status == OC))                       // if it's still in display encoder
                 {
                   __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+                  VoCu.Volt = Enc_V;
                 }
               }
               else if (iSelEXI == 2)                    // if pin '2' -------->  OCP
@@ -1076,9 +1086,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
-                if ((DispEncI > 0) | (Curr.Status == OC))                       // if it's still in display encoder
+                if ((DispEncI > 0) & (Curr.Status == OC))                       // if it's still in display encoder
                 {
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+                  VoCu.Curr = Enc_I;
                 }
               }
               else
@@ -1202,10 +1213,20 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   if (htim == &htim3)
   {
     Enc_V = __HAL_TIM_GET_COUNTER(htim);
+    if (Volt.Status == Nor)                       // if it's still in display encoder
+    {
+      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
+      VoCu.Volt = Enc_V;
+    }
   }
   else if (htim == &htim1)
   {
     Enc_I = __HAL_TIM_GET_COUNTER(htim);
+    if (Volt.Status == Nor)                       // if it's still in display encoder
+    {
+      __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
+      VoCu.Curr = Enc_I;
+    }
   }
 }
 
@@ -1218,7 +1239,22 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-
+  if (Volt.Status == OC)
+  {
+    if (AData [0] > VoCu.Volt)
+    {
+      LED_Data [RelOutNum] = 0;
+      VoCu.Out = 0;
+    }
+  }
+  else if (Curr.Status == OC)
+  {
+    if (AData [1] > VoCu.Curr)
+    {
+      LED_Data [RelOutNum] = 0;
+      VoCu.Out = 0;
+    }
+  }
 }
 
 
@@ -1269,7 +1305,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
     if (ireadRESET >= CorReadEXI)
     {
-      LED_Data [RelOutNum] = ~ LED_Data [RelOutNum];
+      if (VoCu.Out == 0)
+      {
+        LED_Data [RelOutNum] = 1;
+        VoCu.Out = 1;
+      }
+      else
+      {
+        LED_Data [RelOutNum] = 0;
+        VoCu.Out = 0;
+      }
     }
   }
 }
