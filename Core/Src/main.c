@@ -89,9 +89,11 @@ uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 uint16_t Enc_V = 0;
 uint16_t Enc_I = 0;
+uint16_t MaxCurr = 3200;
+uint16_t MaxVolt = 3200;
 
 uint16_t DispEncV = 0, DispEncI = 0;
-uint16_t Disp3s = 20;
+uint16_t Disp3s = 30;
 uint16_t MINEncoderSpeed = 10;
 uint16_t SampleTimeEncSpeed = 500;
 
@@ -112,9 +114,11 @@ Monitor Volt, Curr, USBCurr;
 
 struct
 {
+	uint16_t Kolt;
 	uint16_t Volt;
 	uint16_t Curr;
         uint8_t  Out;
+        uint8_t Set;
 }VoCu;
 
 /* USER CODE END PV */
@@ -388,7 +392,7 @@ static void MX_TIM1_Init(void)
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 12800;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
@@ -439,7 +443,7 @@ static void MX_TIM3_Init(void)
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 12800;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -978,8 +982,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM4Num] = 0;
                 uint16_t VPWM = EEPROM_Read_NUM(M3Page, OfsV);
                 __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
+                VoCu.Volt = VPWM;
                 uint16_t IPWM = EEPROM_Read_NUM(M3Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
+                VoCu.Curr = IPWM;
               }
               else if (iSelEXI == 1)                                                    // if pin '1' -------->  M2
               {
@@ -989,8 +997,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM4Num] = 0;
                 uint16_t VPWM = EEPROM_Read_NUM(M1Page, OfsV);
                 __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
+                VoCu.Volt = VPWM;
                 uint16_t IPWM = EEPROM_Read_NUM(M1Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
+                VoCu.Curr = IPWM;
               }
               else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
               {
@@ -1000,8 +1012,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM4Num] = 0;
                 uint16_t VPWM = EEPROM_Read_NUM(M2Page, OfsV);
                 __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
+                VoCu.Volt = VPWM;
                 uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
+                VoCu.Curr = IPWM;
               }
               else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
               {
@@ -1011,8 +1027,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 LED_Data [LEDM4Num] = 1;
                 uint16_t VPWM = EEPROM_Read_NUM(M4Page, OfsV);
                 __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
+                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
+                VoCu.Volt = VPWM;
                 uint16_t IPWM = EEPROM_Read_NUM(M4Page, OfsI);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
+                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
+                VoCu.Curr = IPWM;
               }
             }
             else
@@ -1078,6 +1098,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 {
                   __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
                   VoCu.Volt = Enc_V;
+                  DispEncV = 0;
+                  VoCu.Set = SET;
                 }
               }
               else if (iSelEXI == 2)                    // if pin '2' -------->  OCP
@@ -1090,6 +1112,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 {
                   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
                   VoCu.Curr = Enc_I;
+                  DispEncI = 0;
+                  VoCu.Set = SET;
                 }
               }
               else
@@ -1151,6 +1175,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               Mon4Seg(ADC_V,VolLoc);
             }
+//            else if ((Volt.Status == OC) & (DispEncV == 1))
+//            {
+//              __HAL_TIM_SET_COUNTER(&htim3, VoCu.Volt);
+//              DispEncV --;
+//            }
             else if (DispEncV >= Disp3s)
             {
               Mon4Seg(Enc_V / 4, VolLoc);
@@ -1166,6 +1195,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               Mon4Seg(ADC_I,CurLoc);
             }
+//            else if ((Volt.Status == OC) & (DispEncV == 1))
+//            {
+//              __HAL_TIM_SET_COUNTER(&htim3, VoCu.Curr);
+//              DispEncI --;
+//            }
             else if (DispEncI >= Disp3s)
             {
               Mon4Seg (Enc_I / 4, CurLoc);
@@ -1213,6 +1247,12 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   if (htim == &htim3)
   {
     Enc_V = __HAL_TIM_GET_COUNTER(htim);
+    DispEncV = Disp3s;
+    if (Enc_V > MaxVolt)
+    {
+      Enc_V = MaxVolt;
+      __HAL_TIM_SET_COUNTER(htim, Enc_V);
+    }
     if (Volt.Status == Nor)                       // if it's still in display encoder
     {
       __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Enc_V);
@@ -1222,6 +1262,12 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   else if (htim == &htim1)
   {
     Enc_I = __HAL_TIM_GET_COUNTER(htim);
+    DispEncI = Disp3s;
+    if (Enc_V > MaxCurr)
+    {
+      Enc_I = MaxCurr;
+      __HAL_TIM_SET_COUNTER(htim, Enc_I);
+    }
     if (Volt.Status == Nor)                       // if it's still in display encoder
     {
       __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Enc_I);
