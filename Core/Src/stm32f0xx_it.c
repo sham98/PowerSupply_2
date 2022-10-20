@@ -47,12 +47,13 @@ extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim17;
 
 extern uint16_t indx;
-int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
-uint16_t oldpos_V = 0, oldpos_I = 0;
-extern uint16_t DispEncV, DispEncI;
-extern uint16_t Disp3s;
-extern uint16_t Enc_V, Enc_I;
-extern uint16_t MINEncoderSpeed;
+extern uint16_t Change;
+//int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
+//uint16_t oldpos_V = 0, oldpos_I = 0;
+//extern uint16_t DispEncV, DispEncI;
+//extern uint16_t Disp3s;
+//extern uint16_t Enc_V, Enc_I;
+//extern uint16_t MINEncoderSpeed;
 //extern uint16_t EncoderSpeedInc;
 extern uint16_t SampleTimeEncSpeed;
 /* USER CODE END PV */
@@ -141,6 +142,20 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+        if (Change == 1)
+        {
+          indx ++;
+          if (indx >= SampleTimeEncSpeed)
+          {
+            indx = 0;
+            Change = 0;
+          }  
+        }
+
+  
+  
+  
+  
 //	indx ++;
 //
 //	if (indx >= SampleTimeEncSpeed)
