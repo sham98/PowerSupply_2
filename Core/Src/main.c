@@ -72,6 +72,7 @@
 #define OfsI            4
 #define VolLoc            32
 #define CurLoc            0
+#define VoltMAX         12800
 
 /* USER CODE END PD */
 
@@ -96,7 +97,7 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0;
 uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
-uint8_t EXIS1Prs [9] = {0};
+uint8_t EXIS1PrePrs [9] = {0};
 uint8_t EXIS2PrePrs [9] = {0};
 uint8_t EXIS1PrvPrs [4] = {0};
 uint8_t EXIS2PrvPrs [4] = {0};
@@ -104,8 +105,8 @@ uint16_t iEXIS1Prs [5] = {0,0,0,0};
 uint16_t iPrsEXIS2 [5] = {0,0,0,0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
-uint16_t MaxCurr = 12800;
-uint16_t MaxVolt = 12800;
+//uint16_t MaxCurr = VoltMAX;
+//uint16_t MaxVolt = VoltMAX;
 uint16_t indx = 0;
 uint16_t Oldindx = 0;
 uint16_t Change = 0;
@@ -115,7 +116,6 @@ uint16_t Disp3s = 30;
 uint16_t MINEncoderSpeed = 10;
 uint16_t SampleTimeEncSpeed = 500;
 uint16_t Status = 0;
-uint16_t dd = 0x4bd7;
 uint8_t LowByte = 0;
 uint8_t HighByte = 0;
 uint8_t dL = 0;
@@ -147,6 +147,7 @@ typedef struct
         uint16_t DispEnc;
         uint16_t CountDisp;
         uint8_t  Out;
+        uint16_t MaxVolt;
 }Monitor;
 Monitor Volt, Curr, USBCurr;
 
@@ -211,6 +212,9 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
+  
+  Volt.MaxVolt = VoltMAX;
+  Curr.MaxVolt = VoltMAX;
   
   HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
@@ -983,7 +987,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*    S1  
  *    start
  */
-          if(EXIS1Prs [iSelEXI + 4] == 1)                // when S1 pin pressed (in iSelEXI status )
+          if(EXIS1PrePrs [iSelEXI + 4] == 1)                // when S1 pin pressed (in iSelEXI status )
           {
             if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)    // If time presses the button not as long as that is to be kept
             {
@@ -991,7 +995,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else if (iEXIS1Prs [iSelEXI + 1] >= iKepEXI)         // If time presses the button as long as that is to be kept
             {
-              EXIS1Prs [iSelEXI + 4] = 0;
+              EXIS1PrePrs [iSelEXI + 4] = 0;
               iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
@@ -1056,7 +1060,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else if ((iEXIS1Prs [iSelEXI + 1] >= iClkEXI) & (iEXIS1Prs [iSelEXI + 1] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              EXIS1Prs [iSelEXI + 4] = 0;
+              EXIS1PrePrs [iSelEXI + 4] = 0;
               iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                                                         // if pin '0' -------->  M3
               {
@@ -1141,7 +1145,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else
             {
-              EXIS1Prs [iSelEXI + 4] = 0;
+              EXIS1PrePrs [iSelEXI + 4] = 0;
             }
           }
           else
@@ -1171,13 +1175,33 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
-                Volt.Status = (Volt.Status == Nor) ? OC : Nor;
-                LED_Data [LEDOVPNum] = ~LED_Data [LEDOVPNum];
+                if (Volt.Status == OC)
+                {
+                  Volt.Status = Nor;
+                  LED_Data [LEDOVPNum] = 0;
+                  Volt.MaxVolt = VoltMAX;
+                }
+                else if (Volt.Status == Nor)
+                {
+                  Volt.Status = OC;
+                  LED_Data [LEDOVPNum] = 1;
+                  Volt.MaxVolt = Volt.Enc;
+                }
               }
               else if (iSelEXI == 1)                    // if pin '2' -------->  OCP
               {
-                Curr.Status = (Curr.Status == Nor) ? OC : Nor;
-                LED_Data [LEDOCPNum] = ~LED_Data [LEDOCPNum];
+                if (Curr.Status == OC)
+                {
+                  Curr.Status = Nor;
+                  LED_Data [LEDOCPNum] = 0;
+                  Curr.MaxVolt = VoltMAX;
+                }
+                else if (Curr.Status == Nor)
+                {
+                  Curr.Status = OC;
+                  LED_Data [LEDOCPNum] = 1;
+                  Curr.MaxVolt = Curr.Enc;
+                }
               }
               else if (iSelEXI == 2)                    // if pin '1' -------->  SV
               {
@@ -1362,9 +1386,9 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     Volt.Enc = Volt.SpdEnc + Volt.Enc;
     Oldindx = indx;
     
-    if (Volt.Enc > MaxVolt)
+    if (Volt.Enc > Volt.MaxVolt)
     {
-      Volt.Enc = MaxVolt;
+      Volt.Enc = Volt.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
     }
     else if (Volt.Enc < 0)
@@ -1372,6 +1396,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       Volt.Enc = 0;
       __HAL_TIM_SET_COUNTER(htim, 0);
     }
+
     if (Volt.Status == Nor)                       // if it's still in display encoder
     {
       __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc);
@@ -1381,12 +1406,18 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   {
     Curr.Enc = __HAL_TIM_GET_COUNTER(htim);
     CountDispEncI = Disp3s;
-//    if (Volt.Enc > MaxCurr)
-//    {
-//      Curr.Enc = MaxCurr;
-//      __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
-//    }
-    if (Volt.Status == Nor)                       // if it's still in display encoder
+    if (Curr.Enc > Curr.MaxVolt)
+    {
+      Curr.Enc = Curr.MaxVolt;
+      __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
+    }
+    else if (Curr.Enc < 0)
+    {
+      Curr.Enc = 0;
+      __HAL_TIM_SET_COUNTER(htim, 0);
+    }
+
+    if (Curr.Status == Nor)                       // if it's still in display encoder
     {
       __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
     }
@@ -1404,15 +1435,16 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
   if (Volt.Status == OC)
   {
-    if (AData [0] > Volt.Enc)
+    if (AData [0] > Volt.MaxVolt)
     {
       LED_Data [RelOutNum] = 0;
       Volt.Out = 0;
     }
   }
-  else if (Curr.Status == OC)
+  
+  if (Curr.Status == OC)
   {
-    if (AData [1] > Curr.Enc)
+    if (AData [1] > Curr.MaxVolt)
     {
       LED_Data [RelOutNum] = 0;
       Volt.Out = 0;
@@ -1440,7 +1472,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
     if (ireadRESET >= CorReadEXI)
     {
-      EXIS1Prs [iSelEXI + 4] = 1;
+      EXIS1PrePrs [iSelEXI + 4] = 1;
     }
   }
   else if (GPIO_Pin == EXI_S2_Pin)
