@@ -96,8 +96,8 @@ TIM_HandleTypeDef htim17;
 uint16_t AData[3], iLED = 0;
 uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
-uint8_t EXIS1PrePrs [4] = {0};
-uint8_t EXIS2PrePrs [4] = {0};
+uint8_t EXIS1Prs [9] = {0};
+uint8_t EXIS2PrePrs [9] = {0};
 uint8_t EXIS1PrvPrs [4] = {0};
 uint8_t EXIS2PrvPrs [4] = {0};
 uint16_t iEXIS1Prs [5] = {0,0,0,0};
@@ -115,7 +115,7 @@ uint16_t Disp3s = 30;
 uint16_t MINEncoderSpeed = 10;
 uint16_t SampleTimeEncSpeed = 500;
 uint16_t Status = 0;
-uint16_t dd = 0xfca5;
+uint16_t dd = 0x4bd7;
 uint8_t LowByte = 0;
 uint8_t HighByte = 0;
 uint8_t dL = 0;
@@ -127,13 +127,19 @@ uint8_t cH = 0;
 enum
 {
   Nor,
-  OC
+  OC,
+  NoMem,
+  M1,
+  M2,
+  M3,
+  M4
 };
 
 typedef struct
 {
 	uint16_t Volt;
 	uint8_t Status;
+	uint8_t Mem;
         int16_t Enc;
         int16_t SpdEnc;
         int16_t OldEnc;
@@ -143,15 +149,6 @@ typedef struct
         uint8_t  Out;
 }Monitor;
 Monitor Volt, Curr, USBCurr;
-
-//struct
-//{
-//	uint16_t Kolt;
-//	uint16_t Volt;
-//	uint16_t Curr;
-//        uint8_t  Out;
-//        uint8_t Set;
-//}VoCu;
 
 /* USER CODE END PV */
 
@@ -169,6 +166,7 @@ static void MX_TIM17_Init(void);
 /* USER CODE BEGIN PFP */
 uint16_t* SevSegm (uint8_t Num);
 void Mon4Seg (uint16_t volt, uint8_t Loc);
+void Delay (void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -213,17 +211,7 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-//  at24_HAL_WriteBytes(&hi2c1, 0xA0, 0, &d, 3);
-//  Status = HAL_I2C_IsDeviceReady(&hi2c1, (0b1010000 << 1) , 3, 1000);
-//  
-//  dL = dd & 0xff;
-//  dH = (dd & 0xff00) >> 8;
-//  
-//  HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), 32, I2C_MEMADD_SIZE_8BIT, &dL, I2C_MEMADD_SIZE_8BIT, 1000 );
-//  HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), 33, I2C_MEMADD_SIZE_8BIT, &dH, I2C_MEMADD_SIZE_8BIT, 1000 );
-//  HAL_I2C_Mem_Read( &hi2c1, (0b10100000), 32, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
-//  HAL_I2C_Mem_Read( &hi2c1, (0b10100000), 33, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
-
+  
   HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
 
@@ -235,7 +223,7 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-//  
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -757,6 +745,20 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /**
+  * @brief Delay
+  * @param void
+  * @retval void
+  */
+void Delay (void)
+{
+  for (uint16_t iDelay = 0; iDelay <= 10000; iDelay ++)
+  {}
+}
+
+
+
+
+/**
   * @brief Get Number in input and convert it into 8 buffer to Display in 7segment.
   * @param Num  Number from 0 to 9.
   * @retval 8 buffer.
@@ -981,7 +983,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 /*    S1  
  *    start
  */
-          if(EXIS1PrePrs [iSelEXI] == 1)                // when S1 pin pressed (in iSelEXI status )
+          if(EXIS1Prs [iSelEXI + 4] == 1)                // when S1 pin pressed (in iSelEXI status )
           {
             if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)    // If time presses the button not as long as that is to be kept
             {
@@ -989,71 +991,76 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else if (iEXIS1Prs [iSelEXI + 1] >= iKepEXI)         // If time presses the button as long as that is to be kept
             {
-              EXIS1PrePrs [iSelEXI] = 0;
+              EXIS1Prs [iSelEXI + 4] = 0;
               iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
                 LowByte = Volt.Enc & 0xff;
                 HighByte = (Volt.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
 
                 LowByte = Curr.Enc & 0xff;
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM3Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM3Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-//                EEPROM_Write_NUM(M3Page, OfsV, Volt.Enc);
-//                EEPROM_Write_NUM(M3Page, OfsI, Curr.Enc);
               }
               else if (iSelEXI == 1)                    // if pin '1' -------->  M1
               {
                 LowByte = Volt.Enc & 0xff;
                 HighByte = (Volt.Enc & 0xff00) >> 8;
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
 
                 LowByte = Curr.Enc & 0xff;
                 HighByte = (Curr.Enc & 0xff00) >> 8;
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM2Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-//                EEPROM_Write_NUM(M1Page, OfsV, Volt.Enc);
-//                EEPROM_Write_NUM(M1Page, OfsI, Curr.Enc);
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
               }
               else if (iSelEXI == 2)                    // if pin '2' -------->  M1
               {
                 LowByte = Volt.Enc & 0xff;
                 HighByte = (Volt.Enc & 0xff00) >> 8;
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
 
                 LowByte = Curr.Enc & 0xff;
                 HighByte = (Curr.Enc & 0xff00) >> 8;
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-//                EEPROM_Write_NUM(M1Page, OfsV, Volt.Enc);
-//                EEPROM_Write_NUM(M1Page, OfsI, Curr.Enc);
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM2Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  M4
               {
                 LowByte = Volt.Enc & 0xff;
                 HighByte = (Volt.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM4Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM4Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
 
                 LowByte = Curr.Enc & 0xff;
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM4Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBCurM4Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
-//                EEPROM_Write_NUM(M4Page, OfsV, Volt.Enc);
-//                EEPROM_Write_NUM(M4Page, OfsI, Curr.Enc);
               }              
             }
             else if ((iEXIS1Prs [iSelEXI + 1] >= iClkEXI) & (iEXIS1Prs [iSelEXI + 1] < iKepEXI))     // if time presses the button as long as that is to be clicked
             {
-              EXIS1PrePrs [iSelEXI] = 0;
+              EXIS1Prs [iSelEXI + 4] = 0;
               iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                                                         // if pin '0' -------->  M3
               {
+                Volt.Mem = M3;
                 LED_Data [LEDM1Num] = 0;
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 1;
@@ -1070,15 +1077,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
-                //                uint16_t VPWM = EEPROM_Read_NUM(M3Page, OfsV);
-////                VoCu.Volt = VPWM;
-////                uint16_t IPWM = EEPROM_Read_NUM(M3Page, OfsI);
-//                VoCu.Curr = IPWM;
               }
               else if (iSelEXI == 1)                                                    // if pin '1' -------->  M1
               {
+                Volt.Mem = M1;
                 LED_Data [LEDM1Num] = 1;
                 LED_Data [LEDM2Num] = 0;
+                LED_Data [LEDM3Num] = 0;
+                LED_Data [LEDM4Num] = 0;
+
+                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
+                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
+                 Volt.Enc = cL | (cH << 8);
+                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc);
+                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+
+                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
+                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
+                Curr.Enc = cL | (cH << 8);
+                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
+              }
+              else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
+              {
+                Volt.Mem = M2;
+                LED_Data [LEDM1Num] = 0;
+                LED_Data [LEDM2Num] = 1;
                 LED_Data [LEDM3Num] = 0;
                 LED_Data [LEDM4Num] = 0;
 
@@ -1093,44 +1117,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
-                //                uint16_t VPWM = EEPROM_Read_NUM(M1Page, OfsV);
-//                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
-//                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
-////                VoCu.Volt = VPWM;
-////                uint16_t IPWM = EEPROM_Read_NUM(M1Page, OfsI);
-//                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
-//                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
-//                VoCu.Curr = IPWM;
-              }
-              else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
-              {
-                LED_Data [LEDM1Num] = 0;
-                LED_Data [LEDM2Num] = 1;
-                LED_Data [LEDM3Num] = 0;
-                LED_Data [LEDM4Num] = 0;
-
-                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
-                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
-                Volt.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc);
-                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
-
-                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
-                HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
-                Curr.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
-                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
-                //                uint16_t VPWM = EEPROM_Read_NUM(M2Page, OfsV);
-//                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
-//                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
-////                VoCu.Volt = VPWM;
-////                uint16_t IPWM = EEPROM_Read_NUM(M2Page, OfsI);
-//                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
-//                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
-//                VoCu.Curr = IPWM;
               }
               else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
               {
+                Volt.Mem = M4;
                 LED_Data [LEDM1Num] = 0;
                 LED_Data [LEDM2Num] = 0;
                 LED_Data [LEDM3Num] = 0;
@@ -1147,19 +1137,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
-                //                uint16_t VPWM = EEPROM_Read_NUM(M4Page, OfsV);
-//                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, VPWM);
-//                __HAL_TIM_SET_COUNTER(&htim3, VPWM);
-//                VoCu.Volt = VPWM;
-//                uint16_t IPWM = EEPROM_Read_NUM(M4Page, OfsI);
-//                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, IPWM);
-//                __HAL_TIM_SET_COUNTER(&htim1, IPWM);
-//                VoCu.Curr = IPWM;
               }
             }
             else
             {
-              EXIS1PrePrs [iSelEXI] = 0;
+              EXIS1Prs [iSelEXI + 4] = 0;
             }
           }
           else
@@ -1365,6 +1347,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
   Change = 1;
+  Volt.Mem = NoMem;
+  LED_Data [LEDM1Num] = 0;
+  LED_Data [LEDM2Num] = 0;
+  LED_Data [LEDM3Num] = 0;
+  LED_Data [LEDM4Num] = 0;
+
   if (htim == &htim3)
   {
     Volt.OldEnc = Volt.Enc;
@@ -1452,7 +1440,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
     if (ireadRESET >= CorReadEXI)
     {
-      EXIS1PrePrs [iSelEXI] = 1;
+      EXIS1Prs [iSelEXI + 4] = 1;
     }
   }
   else if (GPIO_Pin == EXI_S2_Pin)
@@ -1483,11 +1471,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       if (Volt.Out == 0)
       {
         LED_Data [RelOutNum] = 1;
+        LED_Data [LEDOUTNum] = 1;
         Volt.Out = 1;
       }
       else
       {
         LED_Data [RelOutNum] = 0;
+        LED_Data [LEDOUTNum] = 0;
         Volt.Out = 0;
       }
     }
