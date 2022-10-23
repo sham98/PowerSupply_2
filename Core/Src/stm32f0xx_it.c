@@ -48,14 +48,20 @@ extern TIM_HandleTypeDef htim17;
 
 extern uint16_t indx;
 extern uint16_t Change;
-//int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
-//uint16_t oldpos_V = 0, oldpos_I = 0;
-//extern uint16_t DispEncV, DispEncI;
-//extern uint16_t Disp3s;
+int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
+uint16_t oldpos_V = 0, oldpos_I = 0;
+extern uint16_t MaxSamEncTime;
+extern uint16_t MinSamEncTime;
 //extern uint16_t Enc_V, Enc_I;
 //extern uint16_t MINEncoderSpeed;
 //extern uint16_t EncoderSpeedInc;
-extern uint16_t SampleTimeEncSpeed;
+//extern uint16_t SampleTimeEncSpeed;
+extern Monitor Volt, Curr, USBCurr;
+extern uint16_t Disp3s;
+//extern uint16_t MaxSamEncTime;
+extern int16_t MaxEncSpeed;
+extern int16_t MinEncSpeed;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -142,15 +148,63 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-        if (Change == 1)
-        {
-          indx ++;
-          if (indx >= SampleTimeEncSpeed)
-          {
-            indx = 0;
-            Change = 0;
-          }  
-        }
+  int8_t Kmin = 1;
+  indx ++;
+  if (indx >= MaxSamEncTime)
+  {
+    indx = 0;
+    if (Volt.Enc == Volt.OldEnc)
+    {
+    }
+    else 
+    {
+      Volt.SpdEnc = Volt.Enc - Volt.OldEnc;
+      if (Volt.SpdEnc < 0)
+      {
+        Kmin = -1;
+        Volt.SpdEnc = Kmin * Volt.SpdEnc;
+      }
+      else
+      {
+        Kmin = 1;
+      }
+      Volt.CountDisp = Disp3s;
+  //    Volt.Enc = Volt.SpdEnc + Volt.Enc;
+      if (Volt.SpdEnc >= MaxEncSpeed)
+      {
+        Volt.Enc = Kmin * 400 + Volt.Enc;
+      }
+      else if (Volt.SpdEnc <= MinEncSpeed)
+      {
+      }
+      else 
+      {
+        Volt.Enc = Volt.Enc + Kmin * (- 140 + 36 * Volt.SpdEnc) ;
+      }
+      
+      if (Volt.Enc > Volt.MaxVolt)
+      {
+        Volt.Enc = Volt.MaxVolt;
+      }
+      else if (Volt.Enc < 0)
+      {
+        Volt.Enc = 0;
+      }
+      Volt.OldEnc = Volt.Enc;
+      __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+    }    
+  }
+    
+//        if (Change == 1)
+//        {
+//          indx ++;
+//          if (indx >= SampleTimeEncSpeed)
+//          {
+//            indx = 0;
+//            Change = 0;
+//          }  
+//        }
 
   
   
@@ -164,44 +218,21 @@ void SysTick_Handler(void)
 //          EncoderSpeed_V = ((Enc_V - oldpos_V) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
 //          if (EncoderSpeed_V > MINEncoderSpeed)
 //          {
-//            if(Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V > htim3.Init.Period)
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim3, htim3.Init.Period);
-//              Enc_V = htim3.Init.Period;
-//              oldpos_V = htim3.Init.Period;
-////              htim17.Instance -> CCR1 = htim3.Init.Period;
-//            }
-//            else
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim3,Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
-//              oldpos_V = Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
-//              Enc_V = oldpos_V;
-////              htim17.Instance -> CCR1 = Enc_V + (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
-//            }
+//            __HAL_TIM_SET_COUNTER(&htim3,Enc_V + EncoderSpeed_V);
+//            oldpos_V = Enc_V + EncoderSpeed_V;
+//            Enc_V = oldpos_V;
 //            DispEncV = Disp3s;
 //          }
 //          else if (EncoderSpeed_V < -MINEncoderSpeed)
 //          {
-//            if(Enc_V < (1000 / SampleTimeEncSpeed) * EncoderSpeed_V)
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim3, 0);
-////              htim17.Instance -> CCR1 = 0;
-//              Enc_V = 0;
-//              oldpos_V = 0;
-//            }
-//            else
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim3,Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
-////              htim17.Instance -> CCR1 = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
-//              oldpos_V = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
-//              Enc_V = oldpos_V;
-//            }
+//            __HAL_TIM_SET_COUNTER(&htim3,Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
+//            oldpos_V = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
+//            Enc_V = oldpos_V;
 //            DispEncV = Disp3s;
 //          }
 //          else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
 //          {
 //            oldpos_V = Enc_V;
-////            htim17.Instance -> CCR1 = Enc_V;
 //            DispEncV = Disp3s;
 //          }
 //
@@ -251,8 +282,8 @@ void SysTick_Handler(void)
 //            DispEncI = Disp3s;
 //          }
 //        }
-
-  
+//
+//  
   
   
   /* USER CODE END SysTick_IRQn 0 */

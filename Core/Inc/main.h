@@ -104,6 +104,23 @@ void Error_Handler(void);
 //#define Disp3s          3000
 #define IF_ADC          0
 #define IF_Disp         1
+
+typedef struct
+{
+	uint16_t Volt;
+	uint8_t Status;
+	uint8_t Mem;
+        int16_t Enc;
+        int16_t SpdEnc;
+        int16_t OldEnc;
+        uint16_t PWM;
+        uint16_t DispEnc;
+        uint16_t CountDisp;
+        uint8_t  Out;
+        uint16_t MaxVolt;
+        uint16_t EncFactor;
+}Monitor;
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
