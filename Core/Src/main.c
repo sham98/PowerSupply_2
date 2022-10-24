@@ -231,6 +231,9 @@ int main(void)
   Curr.EncFactor = 4;
   Volt.LowOfset = 10;
   Curr.LowOfset = 10;
+  Volt.DispFactor = 1940;
+  Curr.DispFactor = 1;
+  USBCurr.DispFactor = 1;
   Curr.Enc = 4000;
   __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc / Volt.EncFactor);
 
@@ -995,39 +998,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
-#if IF_Test
-  if (iTriInd >= ITriIndMax)
-  {
-    iTriInd = 0;
-    
-    if (Ramp == 2)
-    {
-      iTriangle = iTriangle - TriVolStep;
-      if (iTriangle < 0)
-        iTriangle = 0;
-    }
-    else if (Ramp == 1)
-    {
-      iTriangle = iTriangle + TriVolStep;
-    }
-
-
-    if (iTriangle >= iTriMax)
-    {
-      Ramp = 2;
-    }
-    else if (iTriangle == 0)
-    {
-      Ramp = 1;
-    }
-
-    __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, iTriangle);
-  }  
-  else
-  {
-    iTriInd ++;
-  }  
-#endif
 /*
  *
  *      Extrnal Interrupt
@@ -1349,7 +1319,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *******************************************************************/
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
-              Mon4Seg(ADC_V,VolLoc);
+              Volt.DispVolt = Volt.Volt / Volt.DispFactor;
+              Mon4Seg(Volt.DispVolt, VolLoc);
             }
 //            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
 //            {
@@ -1370,7 +1341,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             
             if ((Curr.Status == Nor) | (CountDispEncI == 0))
             {
-              Mon4Seg(ADC_I,CurLoc);
+              Curr.DispVolt = Curr.Volt / Curr.DispFactor;
+              Mon4Seg(Curr.DispVolt, CurLoc);
             }
 //            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
 //            {
@@ -1388,8 +1360,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               CountDispEncI --;
             }
             
-
-            Mon2Seg(ADC_I_USB);
+            USBCurr.DispVolt = USBCurr.Volt / USBCurr.DispFactor;
+            Mon2Seg(USBCurr.DispVolt);
 
             /******************************************************************/
           }

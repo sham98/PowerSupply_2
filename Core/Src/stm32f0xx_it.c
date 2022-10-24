@@ -159,6 +159,40 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
+#if IF_Test
+  if (iTriInd >= ITriIndMax)
+  {
+    iTriInd = 0;
+    
+    if (Ramp == 2)
+    {
+      iTriangle = iTriangle - TriVolStep;
+      if (iTriangle < 0)
+        iTriangle = 0;
+    }
+    else if (Ramp == 1)
+    {
+      iTriangle = iTriangle + TriVolStep;
+    }
+
+
+    if (iTriangle >= iTriMax)
+    {
+      Ramp = 2;
+    }
+    else if (iTriangle == 0)
+    {
+      Ramp = 1;
+    }
+
+    __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, iTriangle);
+  }  
+  else
+  {
+    iTriInd ++;
+  }  
+#endif
+
   int8_t Kmin = 1;
   indx ++;
   if (indx >= MaxSamEncTime)

@@ -122,6 +122,8 @@ typedef struct
         uint16_t EncFactor;
         uint8_t LowOfset;
         uint8_t HighOfset;
+        uint16_t DispFactor;
+        uint16_t DispVolt;
 }Monitor;
 
 /* USER CODE END Private defines */
