@@ -124,7 +124,18 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
+int16_t KADCnew = 30;
+int16_t KADCold = 70;
 
+
+#if IF_Test
+uint16_t iTriInd = 0;
+uint16_t ITriIndMax = 1;
+int16_t iTriangle = 0;
+uint16_t iTriMax = 12800;
+uint16_t Ramp = 1;
+uint16_t TriVolStep = 4;
+#endif
 enum
 {
   Nor,
@@ -217,9 +228,15 @@ int main(void)
   Volt.MaxVolt = VoltMAX;
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
-  
-  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);
+  Curr.EncFactor = 4;
+  Volt.LowOfset = 10;
+  Curr.LowOfset = 10;
+  Curr.Enc = 4000;
+  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc / Volt.EncFactor);
+
+
+  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);    // Encoder Current PWM
+  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);    // Encoder Voltage PWM
 
 //  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);     // Fan PWM
   HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);    // Current PWM
@@ -978,7 +995,39 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
+#if IF_Test
+  if (iTriInd >= ITriIndMax)
+  {
+    iTriInd = 0;
+    
+    if (Ramp == 2)
+    {
+      iTriangle = iTriangle - TriVolStep;
+      if (iTriangle < 0)
+        iTriangle = 0;
+    }
+    else if (Ramp == 1)
+    {
+      iTriangle = iTriangle + TriVolStep;
+    }
 
+
+    if (iTriangle >= iTriMax)
+    {
+      Ramp = 2;
+    }
+    else if (iTriangle == 0)
+    {
+      Ramp = 1;
+    }
+
+    __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, iTriangle);
+  }  
+  else
+  {
+    iTriInd ++;
+  }  
+#endif
 /*
  *
  *      Extrnal Interrupt
@@ -1472,6 +1521,12 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
+  Volt.Volt = (KADCnew * Volt.Volt + KADCold * AData [0]) / 100;
+  Curr.Volt = (KADCnew * Curr.Volt + KADCold * AData [1]) / 100;
+  USBCurr.Volt = (KADCnew * USBCurr.Volt + KADCold * AData [2]) / 100;
+  Volt.Volt = AData [0];
+  Curr.Volt = AData [1];
+  USBCurr.Volt = AData [2];
   if (Volt.Status == OC)
   {
     if (AData [0] > Volt.MaxVolt)

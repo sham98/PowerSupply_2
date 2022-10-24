@@ -102,15 +102,16 @@ void Error_Handler(void);
 //#define Enc_V	__HAL_TIM_GET_COUNTER(&htim3)
 //#define Enc_I	__HAL_TIM_GET_COUNTER(&htim1)
 //#define Disp3s          3000
-#define IF_ADC          0
-#define IF_Disp         1
+#define IF_Nor          0
+#define IF_Test         1
+
 
 typedef struct
 {
 	uint16_t Volt;
 	uint8_t Status;
 	uint8_t Mem;
-        int16_t Enc;
+        int32_t Enc;
         int16_t SpdEnc;
         int16_t OldEnc;
         uint16_t PWM;
@@ -119,6 +120,8 @@ typedef struct
         uint8_t  Out;
         uint16_t MaxVolt;
         uint16_t EncFactor;
+        uint8_t LowOfset;
+        uint8_t HighOfset;
 }Monitor;
 
 /* USER CODE END Private defines */

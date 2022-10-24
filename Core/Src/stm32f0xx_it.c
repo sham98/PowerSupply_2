@@ -62,6 +62,16 @@ extern uint16_t Disp3s;
 extern int16_t MaxEncSpeed;
 extern int16_t MinEncSpeed;
 
+
+#if IF_Test
+extern uint16_t iTriInd;
+extern uint16_t ITriIndMax;
+extern int16_t iTriangle;
+extern uint16_t iTriMax;
+extern uint16_t Ramp;
+extern uint16_t TriVolStep;
+#endif
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -148,15 +158,13 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+
   int8_t Kmin = 1;
   indx ++;
   if (indx >= MaxSamEncTime)
   {
     indx = 0;
-    if (Volt.Enc == Volt.OldEnc)
-    {
-    }
-    else 
+    if (Volt.Enc != Volt.OldEnc)
     {
       Volt.SpdEnc = Volt.Enc - Volt.OldEnc;
       if (Volt.SpdEnc < 0)
@@ -193,6 +201,47 @@ void SysTick_Handler(void)
       Volt.OldEnc = Volt.Enc;
       __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
       __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+    }    
+
+
+
+    if (Curr.Enc != Curr.OldEnc)
+    {
+      Curr.SpdEnc = Curr.Enc - Curr.OldEnc;
+      if (Curr.SpdEnc < 0)
+      {
+        Kmin = -1;
+        Curr.SpdEnc = Kmin * Curr.SpdEnc;
+      }
+      else
+      {
+        Kmin = 1;
+      }
+      Curr.CountDisp = Disp3s;
+  //    Curr.Enc = Curr.SpdEnc + Curr.Enc;
+      if (Curr.SpdEnc >= MaxEncSpeed)
+      {
+        Curr.Enc = Kmin * 400 + Curr.Enc;
+      }
+      else if (Curr.SpdEnc <= MinEncSpeed)
+      {
+      }
+      else 
+      {
+        Curr.Enc = Curr.Enc + Kmin * (- 140 + 36 * Curr.SpdEnc) ;
+      }
+      
+      if (Curr.Enc > Curr.MaxVolt)
+      {
+        Curr.Enc = Curr.MaxVolt;
+      }
+      else if (Curr.Enc < 0)
+      {
+        Curr.Enc = 0;
+      }
+      Curr.OldEnc = Curr.Enc;
+      __HAL_TIM_SET_COUNTER(&htim3, Curr.Enc);
+      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
     }    
   }
     
