@@ -99,9 +99,7 @@ void Error_Handler(void);
 #define ENC_VA_Pin GPIO_PIN_5
 #define ENC_VA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-//#define Enc_V	__HAL_TIM_GET_COUNTER(&HTIM_ENC_VOL)
-//#define Enc_I	__HAL_TIM_GET_COUNTER(&htim1)
-//#define Disp3s          3000
+
 #define IF_Nor          0
 #define IF_Test         0
 #define HTIM_ENC_CURR       htim1
@@ -123,8 +121,6 @@ typedef struct
         uint8_t  Out;
         uint16_t MaxVolt;
         uint16_t EncFactor;
-        uint8_t LowOfset;
-        uint8_t HighOfset;
         float DispFactor;
         uint16_t DispVolt;
 }Monitor;

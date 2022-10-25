@@ -127,7 +127,7 @@ int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
 int16_t KADCnew = 30;
 int16_t KADCold = 70;
-uint16_t ArrNumFIFO = 20;
+uint16_t ArrNumFIFO = 1000;
 uint16_t AFIFO [1000] = {0};
 uint32_t SumFIFO = 0;
 
@@ -150,20 +150,7 @@ enum
   M4
 };
 
-//typedef struct
-//{
-//	uint16_t Volt;
-//	uint8_t Status;
-//	uint8_t Mem;
-//        int16_t Enc;
-//        int16_t SpdEnc;
-//        int16_t OldEnc;
-//        uint16_t PWM;
-//        uint16_t DispEnc;
-//        uint16_t CountDisp;
-//        uint8_t  Out;
-//        uint16_t MaxVolt;
-//}Monitor;
+
 Monitor Volt, Curr, USBCurr;
 
 /* USER CODE END PV */
@@ -232,8 +219,6 @@ int main(void)
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
   Curr.EncFactor = 4;
-  Volt.LowOfset = 10;
-  Curr.LowOfset = 10;
   Volt.DispFactor = 0.794;
   Curr.DispFactor = 1;
   USBCurr.DispFactor = 1;
@@ -1104,7 +1089,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM3Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
-                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
               }
               else if (iSelEXI == 1)                                                    // if pin '1' -------->  M1
               {
@@ -1124,7 +1109,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
-                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
               }
               else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
               {
@@ -1144,7 +1129,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM2Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
-                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
               }
               else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
               {
@@ -1164,7 +1149,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM4Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
                 __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
-                __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
               }
             }
             else
@@ -1406,25 +1391,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
   if (htim == &HTIM_ENC_VOL)
   {
-    Volt.Enc = (int) __HAL_TIM_GET_COUNTER(htim);
+    Volt.Enc = (int32_t) __HAL_TIM_GET_COUNTER(htim);
     Volt.CountDisp = Disp3s;
-
-//    if (indx >= MaxSamEncTime)
-//    {}
-//    else if (indx <= MinSamEncTime)
-//    {
-//      Volt.Enc = 400 + Volt.Enc;
-//      __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
-//    }
-//    else 
-//    {
-//      Volt.Enc = Volt.Enc + 444 - 0.88 * indx ;
-//      __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
-//    }
-      
-//    Volt.SpdEnc = (Volt.Enc - Volt.OldEnc) / indx;
     
-    if (Volt.Enc > Volt.MaxVolt + 10)
+    if (Volt.Enc > Volt.MaxVolt)
     {
       Volt.Enc = Volt.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
@@ -1441,9 +1411,9 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     }
 //    indx = 0;
   }
-  else if (htim == &htim1)
+  else if (htim == &HTIM_ENC_CURR)
   {
-    Curr.Enc = __HAL_TIM_GET_COUNTER(htim);
+    Curr.Enc = (int32_t) __HAL_TIM_GET_COUNTER(htim);
     CountDispEncI = Disp3s;
     if (Curr.Enc > Curr.MaxVolt)
     {
@@ -1466,25 +1436,6 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 }
 
 
-
-///**
-//  * @brief  Provides a tick value in millisecond.
-//  * @note   This function is declared as __weak  to be overwritten  in case of other 
-//  *       implementations in user file.
-//  * @retval tick value
-//  */
-//uint32_t HAL_GetTick(void)
-//{
-//  indx ++;
-//
-//  if (indx >= MaxSamEncTime)
-//  {
-//    indx = MaxSamEncTime;
-//  }
-//  
-//
-//  return uwTick;
-//}
 
 
 
