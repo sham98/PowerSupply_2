@@ -185,7 +185,7 @@ void SysTick_Handler(void)
       Ramp = 1;
     }
 
-    __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, iTriangle);
+    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, iTriangle);
   }  
   else
   {
@@ -234,7 +234,7 @@ void SysTick_Handler(void)
       }
       Volt.OldEnc = Volt.Enc;
       __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
-      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
     }    
 
 
@@ -275,7 +275,7 @@ void SysTick_Handler(void)
       }
       Curr.OldEnc = Curr.Enc;
       __HAL_TIM_SET_COUNTER(&htim3, Curr.Enc);
-      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
     }    
   }
     
@@ -327,14 +327,14 @@ void SysTick_Handler(void)
 //            if(Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I > htim1.Init.Period)
 //            {
 //              __HAL_TIM_SET_COUNTER(&htim1, htim1.Init.Period);
-////              htim16.Instance -> CCR1 = htim1.Init.Period;
+////              HTIM_PWM_CURR.Instance -> CCR1 = htim1.Init.Period;
 //              oldpos_I = htim1.Init.Period;
 //              Enc_I = oldpos_I;
 //            }
 //            else
 //            {
 //              __HAL_TIM_SET_COUNTER(&htim1,Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-////              htim16.Instance -> CCR1 = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+////              HTIM_PWM_CURR.Instance -> CCR1 = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
 //              oldpos_I = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
 //              Enc_I = oldpos_I;
 //            }
@@ -345,14 +345,14 @@ void SysTick_Handler(void)
 //            if(Enc_I < (1000 / SampleTimeEncSpeed) * EncoderSpeed_I)
 //            {
 //              __HAL_TIM_SET_COUNTER(&htim1, 0);
-////              htim16.Instance -> CCR1 = 0;
+////              HTIM_PWM_CURR.Instance -> CCR1 = 0;
 //              oldpos_I = 0;
 //              Enc_I = 0;
 //            }
 //            else
 //            {
 //              __HAL_TIM_SET_COUNTER(&htim1,Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-////              htim16.Instance -> CCR1 = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
+////              HTIM_PWM_CURR.Instance -> CCR1 = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
 //              oldpos_I = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
 //              Enc_I = oldpos_I;
 //            }
@@ -360,7 +360,7 @@ void SysTick_Handler(void)
 //          }
 //          else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
 //          {
-////            htim16.Instance -> CCR1 = Enc_I;
+////            HTIM_PWM_CURR.Instance -> CCR1 = Enc_I;
 //            oldpos_I = Enc_I;
 //            DispEncI = Disp3s;
 //          }

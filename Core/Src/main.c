@@ -94,7 +94,8 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
-uint16_t AData[3], iLED = 0;
+uint32_t AData[3];
+uint16_t iLED = 0;
 uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
 uint8_t EXIS1PrePrs [9] = {0};
@@ -235,15 +236,15 @@ int main(void)
   Curr.DispFactor = 1;
   USBCurr.DispFactor = 1;
   Curr.Enc = 4000;
-  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc / Volt.EncFactor);
+  __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
 
 
-  HAL_TIM_Encoder_Start_IT(&htim1, TIM_CHANNEL_ALL);    // Encoder Current PWM
-  HAL_TIM_Encoder_Start_IT(&htim3, TIM_CHANNEL_ALL);    // Encoder Voltage PWM
+  HAL_TIM_Encoder_Start_IT(&HTIM_ENC_CURR, TIM_CHANNEL_ALL);    // Encoder Current PWM
+  HAL_TIM_Encoder_Start_IT(&HTIM_ENC_VOL, TIM_CHANNEL_ALL);    // Encoder Voltage PWM
 
-//  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);     // Fan PWM
-  HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);    // Current PWM
-  HAL_TIM_PWM_Start(&htim17, TIM_CHANNEL_1);    // Voltage PWM
+//  HAL_TIM_PWM_Start(&HTIM_ENC_VOL, TIM_CHANNEL_3);     // Fan PWM
+  HAL_TIM_PWM_Start(&HTIM_PWM_CURR, TIM_CHANNEL_1);    // Current PWM
+  HAL_TIM_PWM_Start(&HTIM_PWM_VOL, TIM_CHANNEL_1);    // Voltage PWM
 
   HAL_TIM_Base_Start_IT(&htim14);
 
@@ -1094,13 +1095,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM3Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM3Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Volt.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
-                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
 
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM3Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM3Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
               }
               else if (iSelEXI == 1)                                                    // if pin '1' -------->  M1
@@ -1114,13 +1115,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                  Volt.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
-                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
 
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM1Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
               }
               else if (iSelEXI == 2)                                                    // if pin '2' -------->  M1
@@ -1134,13 +1135,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM2Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM2Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Volt.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
-                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
 
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM2Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM2Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
               }
               else if (iSelEXI == 3)                                                    // if pin '3' -------->  M4
@@ -1154,13 +1155,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBVolM4Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBVolM4Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Volt.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
-                __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
 
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), LBCurM4Mem, I2C_MEMADD_SIZE_8BIT,&cL,I2C_MEMADD_SIZE_8BIT,1000);
                 HAL_I2C_Mem_Read( &hi2c1, (0b10100000), HBCurM4Mem, I2C_MEMADD_SIZE_8BIT,&cH,I2C_MEMADD_SIZE_8BIT,1000);
                 Curr.Enc = cL | (cH << 8);
-                __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
                 __HAL_TIM_SET_COUNTER(&htim1, Curr.Enc);
               }
             }
@@ -1246,7 +1247,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               {
                 if ((Volt.CountDisp > 0) & (Volt.Status == OC))                       // if it's still in display encoder
                 {
-                  __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+                  __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
                   Volt.CountDisp = 0;
                 }
               }
@@ -1258,7 +1259,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               {
                 if ((CountDispEncI > 0) & (Curr.Status == OC))                       // if it's still in display encoder
                 {
-                  __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+                  __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
                   CountDispEncI = 0;
                 }
               }
@@ -1324,7 +1325,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
 //            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
 //            {
-//              __HAL_TIM_SET_COUNTER(&htim3, VoCu.Volt);
+//              __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, VoCu.Volt);
 //              Volt.CountDisp --;
 //            }
             else if (Volt.CountDisp >= Disp3s)
@@ -1346,7 +1347,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
 //            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
 //            {
-//              __HAL_TIM_SET_COUNTER(&htim3, VoCu.Curr);
+//              __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, VoCu.Curr);
 //              CountDispEncI --;
 //            }
             else if (CountDispEncI >= Disp3s)
@@ -1401,7 +1402,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   LED_Data [LEDM3Num] = 0;
   LED_Data [LEDM4Num] = 0;
 
-  if (htim == &htim3)
+  if (htim == &HTIM_ENC_VOL)
   {
     Volt.Enc = (int) __HAL_TIM_GET_COUNTER(htim);
     Volt.CountDisp = Disp3s;
@@ -1434,7 +1435,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
     if (Volt.Status == Nor)                       // if it's still in display encoder
     {
-      __HAL_TIM_SET_COMPARE(&htim17, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
     }
 //    indx = 0;
   }
@@ -1455,7 +1456,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
     if (Curr.Status == Nor)                       // if it's still in display encoder
     {
-      __HAL_TIM_SET_COMPARE(&htim16, TIM_CHANNEL_1, Curr.Enc);
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
     }
 //    indx = 0;
   }
@@ -1493,6 +1494,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
+//  for (uint8_t iFIFO = 0; iFIFO < 10; iFIFO ++)
+//  {
+//    AFIFO [iFIFO] = AFIFO [iFIFO];
+//  }
   Volt.Volt = (KADCnew * Volt.Volt + KADCold * AData [0]) / 100;
   Curr.Volt = (KADCnew * Curr.Volt + KADCold * AData [1]) / 100;
   USBCurr.Volt = (KADCnew * USBCurr.Volt + KADCold * AData [2]) / 100;
