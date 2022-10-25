@@ -83,7 +83,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
-DMA_HandleTypeDef hdma_adc;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -94,7 +93,7 @@ TIM_HandleTypeDef htim16;
 TIM_HandleTypeDef htim17;
 
 /* USER CODE BEGIN PV */
-uint32_t AData[3];
+uint16_t AData[3];
 uint16_t iLED = 0;
 uint8_t LED_Data [LED_Num] = {0};
 uint8_t iSelEXI = 0;
@@ -169,7 +168,6 @@ Monitor Volt, Curr, USBCurr;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
 static void MX_ADC_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
@@ -216,7 +214,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_ADC_Init();
   MX_TIM1_Init();
   MX_TIM3_Init();
@@ -249,7 +246,8 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim14);
 
   HAL_ADCEx_Calibration_Start(&hadc);
-  HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+//  HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+//  HAL_ADC_Start_DMA(&hadc, (uint16_t*)AData, 1);
 
   /* USER CODE END 2 */
 
@@ -343,7 +341,7 @@ static void MX_ADC_Init(void)
   hadc.Init.DiscontinuousConvMode = DISABLE;
   hadc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc.Init.DMAContinuousRequests = ENABLE;
+  hadc.Init.DMAContinuousRequests = DISABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   if (HAL_ADC_Init(&hadc) != HAL_OK)
   {
@@ -355,22 +353,6 @@ static void MX_ADC_Init(void)
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
   sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure for the selected ADC regular channel to be converted.
-  */
-  sConfig.Channel = ADC_CHANNEL_1;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure for the selected ADC regular channel to be converted.
-  */
-  sConfig.Channel = ADC_CHANNEL_2;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -493,7 +475,6 @@ static void MX_TIM3_Init(void)
 
   TIM_Encoder_InitTypeDef sConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM3_Init 1 */
 
@@ -504,10 +485,6 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 51210;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
@@ -527,18 +504,9 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -698,22 +666,6 @@ static void MX_TIM17_Init(void)
 }
 
 /**
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-
-}
-
-/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -731,6 +683,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, O_SER_Pin|O_RCK_Pin|O_CLK_Pin|O_S2_Pin
                           |O_S1_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
   /*Configure GPIO pins : O_SER_Pin O_CLK_Pin */
   GPIO_InitStruct.Pin = O_SER_Pin|O_CLK_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -744,6 +699,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : EXI_OUT_Pin EXI_S1_Pin */
   GPIO_InitStruct.Pin = EXI_OUT_Pin|EXI_S1_Pin;
@@ -999,6 +961,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
+          HAL_ADC_Start(&hadc);
+          HAL_ADC_PollForConversion(&hadc, 1000);
+          AData[0] = HAL_ADC_GetValue (&hadc);
 /*
  *
  *      Extrnal Interrupt
@@ -1498,6 +1463,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 //  {
 //    AFIFO [iFIFO] = AFIFO [iFIFO];
 //  }
+  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
   Volt.Volt = (KADCnew * Volt.Volt + KADCold * AData [0]) / 100;
   Curr.Volt = (KADCnew * Curr.Volt + KADCold * AData [1]) / 100;
   USBCurr.Volt = (KADCnew * USBCurr.Volt + KADCold * AData [2]) / 100;

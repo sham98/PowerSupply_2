@@ -23,7 +23,6 @@
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-extern DMA_HandleTypeDef hdma_adc;
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
@@ -60,7 +59,7 @@ extern DMA_HandleTypeDef hdma_adc;
 /* USER CODE END 0 */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                                                            /**
+                                        /**
   * Initializes the Global MSP.
   */
 void HAL_MspInit(void)
@@ -99,30 +98,11 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC GPIO Configuration
     PA0     ------> ADC_IN0
-    PA1     ------> ADC_IN1
-    PA2     ------> ADC_IN2
     */
-    GPIO_InitStruct.Pin = AI_V_Pin|AI_I_Pin|AI_IUSB_Pin;
+    GPIO_InitStruct.Pin = AI_V_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    /* ADC1 DMA Init */
-    /* ADC Init */
-    hdma_adc.Instance = DMA1_Channel1;
-    hdma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
-    hdma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
-    hdma_adc.Init.MemInc = DMA_MINC_ENABLE;
-    hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-    hdma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
-    hdma_adc.Init.Mode = DMA_CIRCULAR;
-    hdma_adc.Init.Priority = DMA_PRIORITY_LOW;
-    if (HAL_DMA_Init(&hdma_adc) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    __HAL_LINKDMA(hadc,DMA_Handle,hdma_adc);
+    HAL_GPIO_Init(AI_V_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -149,13 +129,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
     /**ADC GPIO Configuration
     PA0     ------> ADC_IN0
-    PA1     ------> ADC_IN1
-    PA2     ------> ADC_IN2
     */
-    HAL_GPIO_DeInit(GPIOA, AI_V_Pin|AI_I_Pin|AI_IUSB_Pin);
+    HAL_GPIO_DeInit(AI_V_GPIO_Port, AI_V_Pin);
 
-    /* ADC1 DMA DeInit */
-    HAL_DMA_DeInit(hadc->DMA_Handle);
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */
@@ -268,19 +244,7 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* htim_encoder)
 
   /* USER CODE END TIM1_MspInit 1 */
   }
-
-}
-
-/**
-* @brief TIM_PWM MSP Initialization
-* This function configures the hardware resources used in this example
-* @param htim_pwm: TIM_PWM handle pointer
-* @retval None
-*/
-void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef* htim_pwm)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(htim_pwm->Instance==TIM3)
+  else if(htim_encoder->Instance==TIM3)
   {
   /* USER CODE BEGIN TIM3_MspInit 0 */
 
@@ -360,32 +324,11 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef* htim)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(htim->Instance==TIM3)
-  {
-  /* USER CODE BEGIN TIM3_MspPostInit 0 */
-
-  /* USER CODE END TIM3_MspPostInit 0 */
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    /**TIM3 GPIO Configuration
-    PB0     ------> TIM3_CH3
-    */
-    GPIO_InitStruct.Pin = PWM_FAN_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF1_TIM3;
-    HAL_GPIO_Init(PWM_FAN_GPIO_Port, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN TIM3_MspPostInit 1 */
-
-  /* USER CODE END TIM3_MspPostInit 1 */
-  }
-  else if(htim->Instance==TIM16)
+  if(htim->Instance==TIM16)
   {
   /* USER CODE BEGIN TIM16_MspPostInit 0 */
 
   /* USER CODE END TIM16_MspPostInit 0 */
-
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**TIM16 GPIO Configuration
     PA6     ------> TIM16_CH1
@@ -452,18 +395,7 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* htim_encoder)
 
   /* USER CODE END TIM1_MspDeInit 1 */
   }
-
-}
-
-/**
-* @brief TIM_PWM MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param htim_pwm: TIM_PWM handle pointer
-* @retval None
-*/
-void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* htim_pwm)
-{
-  if(htim_pwm->Instance==TIM3)
+  else if(htim_encoder->Instance==TIM3)
   {
   /* USER CODE BEGIN TIM3_MspDeInit 0 */
 
@@ -472,11 +404,10 @@ void HAL_TIM_PWM_MspDeInit(TIM_HandleTypeDef* htim_pwm)
     __HAL_RCC_TIM3_CLK_DISABLE();
 
     /**TIM3 GPIO Configuration
-    PB0     ------> TIM3_CH3
     PB4     ------> TIM3_CH1
     PB5     ------> TIM3_CH2
     */
-    HAL_GPIO_DeInit(GPIOB, PWM_FAN_Pin|ENC_VB_Pin|ENC_VA_Pin);
+    HAL_GPIO_DeInit(GPIOB, ENC_VB_Pin|ENC_VA_Pin);
 
     /* TIM3 interrupt DeInit */
     HAL_NVIC_DisableIRQ(TIM3_IRQn);
