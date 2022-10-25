@@ -98,17 +98,16 @@ void Error_Handler(void);
 #define ENC_VB_GPIO_Port GPIOB
 #define ENC_VA_Pin GPIO_PIN_5
 #define ENC_VA_GPIO_Port GPIOB
-#define HTIM_ENC_CURR       htim1
-#define HTIM_ENC_VOL        htim3
-#define HTIM_PWM_CURR       htim16
-#define HTIM_PWM_VOL        htim17
 /* USER CODE BEGIN Private defines */
 //#define Enc_V	__HAL_TIM_GET_COUNTER(&HTIM_ENC_VOL)
 //#define Enc_I	__HAL_TIM_GET_COUNTER(&htim1)
 //#define Disp3s          3000
 #define IF_Nor          0
 #define IF_Test         0
-
+#define HTIM_ENC_CURR       htim1
+#define HTIM_ENC_VOL        htim3
+#define HTIM_PWM_CURR       htim16
+#define HTIM_PWM_VOL        htim17
 
 typedef struct
 {
@@ -126,7 +125,7 @@ typedef struct
         uint16_t EncFactor;
         uint8_t LowOfset;
         uint8_t HighOfset;
-        uint16_t DispFactor;
+        float DispFactor;
         uint16_t DispVolt;
 }Monitor;
 

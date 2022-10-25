@@ -127,7 +127,9 @@ int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
 int16_t KADCnew = 30;
 int16_t KADCold = 70;
-
+uint16_t ArrNumFIFO = 20;
+uint16_t AFIFO [1000] = {0};
+uint32_t SumFIFO = 0;
 
 #if IF_Test
 uint16_t iTriInd = 0;
@@ -232,7 +234,7 @@ int main(void)
   Curr.EncFactor = 4;
   Volt.LowOfset = 10;
   Curr.LowOfset = 10;
-  Volt.DispFactor = 1940;
+  Volt.DispFactor = 0.794;
   Curr.DispFactor = 1;
   USBCurr.DispFactor = 1;
   Curr.Enc = 4000;
@@ -758,13 +760,13 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(EXI_S2_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(EXTI2_3_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI2_3_IRQn);
 
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
@@ -1494,16 +1496,20 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-//  for (uint8_t iFIFO = 0; iFIFO < 10; iFIFO ++)
-//  {
-//    AFIFO [iFIFO] = AFIFO [iFIFO];
-//  }
-  Volt.Volt = (KADCnew * Volt.Volt + KADCold * AData [0]) / 100;
+  SumFIFO = 0;
+  for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+  {
+    AFIFO [iFIFO] = AFIFO [iFIFO + 1];
+    SumFIFO += AFIFO [iFIFO];
+  }
+  AFIFO [ArrNumFIFO - 1] = AData [0];
+  SumFIFO += AFIFO [ArrNumFIFO - 1];
+  Volt.Volt = SumFIFO / ArrNumFIFO;
   Curr.Volt = (KADCnew * Curr.Volt + KADCold * AData [1]) / 100;
   USBCurr.Volt = (KADCnew * USBCurr.Volt + KADCold * AData [2]) / 100;
-  Volt.Volt = AData [0];
-  Curr.Volt = AData [1];
-  USBCurr.Volt = AData [2];
+//  Volt.Volt = AData [0];
+//  Curr.Volt = AData [1];
+//  USBCurr.Volt = AData [2];
   if (Volt.Status == OC)
   {
     if (AData [0] > Volt.MaxVolt)
