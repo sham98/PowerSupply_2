@@ -136,6 +136,7 @@ uint16_t iTriMax = 12800;
 uint16_t Ramp = 1;
 uint16_t TriVolStep = 4;
 #endif
+
 enum
 {
   Nor,
@@ -216,9 +217,10 @@ int main(void)
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
   Curr.EncFactor = 4;
-  Volt.DispFactor = 0.794;
-  Curr.DispFactor = 1;
-  USBCurr.DispFactor = 1;
+  Volt.DispFactor0 = - 0.2066;
+  Volt.DispFactor1 = 0.01258;
+  Curr.DispFactor1 = 1;
+  USBCurr.DispFactor1 = 1;
   Curr.Enc = 4000;
   __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
 
@@ -1180,7 +1182,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
-                if (Volt.Status == OC)                  // if OCV enabled
+                if (Volt.Status == OC)                  // if OVP enabled
                 {
                   Volt.Status = Nor;                    // enable Normal 
                   LED_Data [LEDOVPNum] = 0;             // OCV LED OFF
@@ -1302,7 +1304,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *******************************************************************/
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
-              Volt.DispVolt = Volt.Volt / Volt.DispFactor;
+              Volt.DispVolt = Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0;
               Mon4Seg(Volt.DispVolt, VolLoc);
             }
             else if (Volt.CountDisp >= Disp3s)
@@ -1319,7 +1321,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             
             if ((Curr.Status == Nor) | (CountDispEncI == 0))
             {
-              Curr.DispVolt = Curr.Volt / Curr.DispFactor;
+              Curr.DispVolt = Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0;
               Mon4Seg(Curr.DispVolt, CurLoc);
             }
             else if (CountDispEncI >= Disp3s)
@@ -1333,7 +1335,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               CountDispEncI --;
             }
             
-            USBCurr.DispVolt = USBCurr.Volt / USBCurr.DispFactor;
+            USBCurr.DispVolt = USBCurr.DispFactor1 * USBCurr.Volt + USBCurr.DispFactor0;
             Mon2Seg(USBCurr.DispVolt);
 
             /******************************************************************/
@@ -1367,7 +1369,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
-  Change = 1;
+  ArrNumFIFO = 10;
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
   LED_Data [LEDM2Num] = 0;
@@ -1390,7 +1392,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COUNTER(htim, 0);
     }
 
-    if (Volt.Status == Nor)                       // if it's still in display encoder
+    if (Volt.Status == Nor)                       // if in normal mode set PWM directly
     {
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
     }
@@ -1430,20 +1432,21 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-  uint32_t SumFIFO [3] = {0,0,0};
-  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)
+  uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
+  ArrNumFIFO = 1000;
+  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)            // Array for 3 ADCs
   {
-    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)          // Array sum "ArrNumFIFO" number of ADCs
     {
-      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];
-      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];
+      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];            // 
+      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];                     // sum of ADCs
     }
-    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];
-    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
+    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];                  // fill the last array
+    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];               // sum the last ADC value
   }
-  Volt.Volt = SumFIFO [0]/ ArrNumFIFO;
-  Curr.Volt = SumFIFO [1]/ ArrNumFIFO;
-  USBCurr.Volt = SumFIFO [2]/ ArrNumFIFO;
+  Volt.Volt = SumFIFO [0]/ ArrNumFIFO;                                  // average of sum values of Volt
+  Curr.Volt = SumFIFO [1]/ ArrNumFIFO;                                  // average of sum values of Current
+  USBCurr.Volt = SumFIFO [2]/ ArrNumFIFO;                               // average of sum values of USB current
 
   if (Volt.Status == OC)
   {
@@ -1476,17 +1479,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   uint8_t ireadRESET = 0;
   if (GPIO_Pin == EXI_S1_Pin)
   {
-    for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)
+    for (uint8_t iread = 0; iread < MAXReadEXI; iread ++)                       // *************************************************
     {
-      if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)
+      if (HAL_GPIO_ReadPin(EXI_S1_GPIO_Port, EXI_S1_Pin) == 0)                  // *
       {
-        ireadRESET ++;
-      }
+        ireadRESET ++;                                                          // *
+      }                                                                         // *                    Debouncing procedure
     }
-    if (ireadRESET >= CorReadEXI)
+    if (ireadRESET >= CorReadEXI)                                               // *
     {
-      EXIS1PrePrs [iSelEXI + 4] = 1;
-    }
+      EXIS1PrePrs [iSelEXI + 4] = 1;                                            // *
+    }                                                                           // *************************************************
   }
   else if (GPIO_Pin == EXI_S2_Pin)
   {

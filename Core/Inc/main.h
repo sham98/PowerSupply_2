@@ -121,7 +121,8 @@ typedef struct
         uint8_t  Out;
         uint16_t MaxVolt;
         uint16_t EncFactor;
-        float DispFactor;
+        float DispFactor1;
+        float DispFactor0;
         uint16_t DispVolt;
 }Monitor;
 
