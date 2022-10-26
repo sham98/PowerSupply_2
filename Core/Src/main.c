@@ -22,8 +22,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-//#include "EEPROM.h"
-//#include "ee24.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,15 +104,14 @@ uint16_t iEXIS1Prs [5] = {0,0,0,0};
 uint16_t iPrsEXIS2 [5] = {0,0,0,0};
 uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
-//uint16_t MaxCurr = VoltMAX;
-//uint16_t MaxVolt = VoltMAX;
+
 uint16_t indx = 0;
 uint16_t Oldindx = 0;
 uint16_t Change = 0;
 uint16_t CountDispEncI = 0;
 uint16_t DispEncI = 0;
 uint16_t Disp3s = 30;
-//uint16_t MinSamEncTime = 30;
+
 uint16_t MaxSamEncTime = 30;
 uint16_t Status = 0;
 uint8_t LowByte = 0;
@@ -128,8 +125,8 @@ int16_t MinEncSpeed = 4;
 int16_t KADCnew = 30;
 int16_t KADCold = 70;
 uint16_t ArrNumFIFO = 1000;
-uint16_t AFIFO [1000] = {0};
-uint32_t SumFIFO = 0;
+uint16_t AFIFO [3][1000] = {0};
+
 
 #if IF_Test
 uint16_t iTriInd = 0;
@@ -956,8 +953,6 @@ void Mon2Seg (uint16_t volt)
 {
   for (uint8_t i = 0; i <= 1; i ++)
   {
-//    uint16_t Num = volt % 10;                           // Remainder of divide in 10
-//    volt = volt / 10;                                   // Quotient of divide in 10
     uint16_t *pBuf = SevSegm (volt / 10);
     for (uint8_t i2disp = 0; i2disp < 8; i2disp ++)     // Locate Remainder in LED_Data
     {
@@ -1008,14 +1003,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iEXIS1Prs [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  M3
               {
-                LowByte = Volt.Enc & 0xff;
-                HighByte = (Volt.Enc & 0xff00) >> 8;
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                LowByte = Volt.Enc & 0xff;              // seperate Low Byte
+                HighByte = (Volt.Enc & 0xff00) >> 8;            // seperate High Byte
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );          // write Low Byte
                 Delay();
-                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
+                HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM3Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );         // write High Byte
                 Delay();
 
-                LowByte = Curr.Enc & 0xff;
+                LowByte = Curr.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM3Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
@@ -1023,14 +1018,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 1)                    // if pin '1' -------->  M1
               {
-                LowByte = Volt.Enc & 0xff;
+                LowByte = Volt.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Volt.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM1Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
 
-                LowByte = Curr.Enc & 0xff;
+                LowByte = Curr.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM1Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
@@ -1038,14 +1033,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 2)                    // if pin '2' -------->  M1
               {
-                LowByte = Volt.Enc & 0xff;
+                LowByte = Volt.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Volt.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM2Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
 
-                LowByte = Curr.Enc & 0xff;
+                LowByte = Curr.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM2Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
@@ -1053,14 +1048,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  M4
               {
-                LowByte = Volt.Enc & 0xff;
+                LowByte = Volt.Enc & 0xff;              // seperate Low Byte
                 HighByte = (Volt.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBVolM4Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), HBVolM4Mem, I2C_MEMADD_SIZE_8BIT, &HighByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
 
-                LowByte = Curr.Enc & 0xff;
+                LowByte = Curr.Enc & 0xff;                      // seperate Low Byte
                 HighByte = (Curr.Enc & 0xff00) >> 8;
                 HAL_I2C_Mem_Write( &hi2c1, (0b1010000 << 1), LBCurM4Mem, I2C_MEMADD_SIZE_8BIT, &LowByte, I2C_MEMADD_SIZE_8BIT, 1000 );
                 Delay();
@@ -1185,11 +1180,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               iPrsEXIS2 [iSelEXI + 1] = 0;                   // to avoid run this if in next
               if (iSelEXI == 0)                         // if pin '0' -------->  OVP
               {
-                if (Volt.Status == OC)
+                if (Volt.Status == OC)                  // if OCV enabled
                 {
-                  Volt.Status = Nor;
-                  LED_Data [LEDOVPNum] = 0;
-                  Volt.MaxVolt = VoltMAX;
+                  Volt.Status = Nor;                    // enable Normal 
+                  LED_Data [LEDOVPNum] = 0;             // OCV LED OFF
+                  Volt.MaxVolt = VoltMAX;               // set MAX voltage 
                 }
                 else if (Volt.Status == Nor)
                 {
@@ -1310,11 +1305,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               Volt.DispVolt = Volt.Volt / Volt.DispFactor;
               Mon4Seg(Volt.DispVolt, VolLoc);
             }
-//            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
-//            {
-//              __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, VoCu.Volt);
-//              Volt.CountDisp --;
-//            }
             else if (Volt.CountDisp >= Disp3s)
             {
               Volt.DispEnc = Volt.Enc / 4;
@@ -1332,11 +1322,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               Curr.DispVolt = Curr.Volt / Curr.DispFactor;
               Mon4Seg(Curr.DispVolt, CurLoc);
             }
-//            else if ((Volt.Status == OC) & (Volt.CountDisp == 1))
-//            {
-//              __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, VoCu.Curr);
-//              CountDispEncI --;
-//            }
             else if (CountDispEncI >= Disp3s)
             {
               DispEncI = Curr.Enc / 4;
@@ -1409,7 +1394,6 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     {
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
     }
-//    indx = 0;
   }
   else if (htim == &HTIM_ENC_CURR)
   {
@@ -1430,7 +1414,6 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     {
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
     }
-//    indx = 0;
   }
   
 }
@@ -1447,23 +1430,24 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-  SumFIFO = 0;
-  for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+  uint32_t SumFIFO [3] = {0,0,0};
+  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)
   {
-    AFIFO [iFIFO] = AFIFO [iFIFO + 1];
-    SumFIFO += AFIFO [iFIFO];
+    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+    {
+      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];
+      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];
+    }
+    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];
+    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
   }
-  AFIFO [ArrNumFIFO - 1] = AData [0];
-  SumFIFO += AFIFO [ArrNumFIFO - 1];
-  Volt.Volt = SumFIFO / ArrNumFIFO;
-  Curr.Volt = (KADCnew * Curr.Volt + KADCold * AData [1]) / 100;
-  USBCurr.Volt = (KADCnew * USBCurr.Volt + KADCold * AData [2]) / 100;
-//  Volt.Volt = AData [0];
-//  Curr.Volt = AData [1];
-//  USBCurr.Volt = AData [2];
+  Volt.Volt = SumFIFO [0]/ ArrNumFIFO;
+  Curr.Volt = SumFIFO [1]/ ArrNumFIFO;
+  USBCurr.Volt = SumFIFO [2]/ ArrNumFIFO;
+
   if (Volt.Status == OC)
   {
-    if (AData [0] > Volt.MaxVolt)
+    if (Volt.Volt > Volt.MaxVolt)
     {
       LED_Data [RelOutNum] = 0;
       Volt.Out = 0;

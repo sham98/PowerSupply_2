@@ -52,13 +52,10 @@ int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
 uint16_t oldpos_V = 0, oldpos_I = 0;
 extern uint16_t MaxSamEncTime;
 extern uint16_t MinSamEncTime;
-//extern uint16_t Enc_V, Enc_I;
-//extern uint16_t MINEncoderSpeed;
-//extern uint16_t EncoderSpeedInc;
-//extern uint16_t SampleTimeEncSpeed;
+
 extern Monitor Volt, Curr, USBCurr;
 extern uint16_t Disp3s;
-//extern uint16_t MaxSamEncTime;
+
 extern int16_t MaxEncSpeed;
 extern int16_t MinEncSpeed;
 
@@ -211,7 +208,7 @@ void SysTick_Handler(void)
         Kmin = 1;
       }
       Volt.CountDisp = Disp3s;
-  //    Volt.Enc = Volt.SpdEnc + Volt.Enc;
+
       if (Volt.SpdEnc >= MaxEncSpeed)
       {
         Volt.Enc = Kmin * 400 + Volt.Enc;
@@ -233,7 +230,7 @@ void SysTick_Handler(void)
         Volt.Enc = 0;
       }
       Volt.OldEnc = Volt.Enc;
-      __HAL_TIM_SET_COUNTER(&htim3, Volt.Enc);
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
     }    
 
@@ -252,7 +249,7 @@ void SysTick_Handler(void)
         Kmin = 1;
       }
       Curr.CountDisp = Disp3s;
-  //    Curr.Enc = Curr.SpdEnc + Curr.Enc;
+
       if (Curr.SpdEnc >= MaxEncSpeed)
       {
         Curr.Enc = Kmin * 400 + Curr.Enc;
@@ -274,101 +271,11 @@ void SysTick_Handler(void)
         Curr.Enc = 0;
       }
       Curr.OldEnc = Curr.Enc;
-      __HAL_TIM_SET_COUNTER(&htim3, Curr.Enc);
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Curr.Enc);
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
     }    
   }
-    
-//        if (Change == 1)
-//        {
-//          indx ++;
-//          if (indx >= SampleTimeEncSpeed)
-//          {
-//            indx = 0;
-//            Change = 0;
-//          }  
-//        }
-
-  
-  
-  
-  
-//	indx ++;
-//
-//	if (indx >= SampleTimeEncSpeed)
-//	{
-//          indx = 0;
-//          EncoderSpeed_V = ((Enc_V - oldpos_V) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
-//          if (EncoderSpeed_V > MINEncoderSpeed)
-//          {
-//            __HAL_TIM_SET_COUNTER(&htim3,Enc_V + EncoderSpeed_V);
-//            oldpos_V = Enc_V + EncoderSpeed_V;
-//            Enc_V = oldpos_V;
-//            DispEncV = Disp3s;
-//          }
-//          else if (EncoderSpeed_V < -MINEncoderSpeed)
-//          {
-//            __HAL_TIM_SET_COUNTER(&htim3,Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V);
-//            oldpos_V = Enc_V - (1000 / SampleTimeEncSpeed) * EncoderSpeed_V;
-//            Enc_V = oldpos_V;
-//            DispEncV = Disp3s;
-//          }
-//          else if ((EncoderSpeed_V > 0) | (EncoderSpeed_V < 0))
-//          {
-//            oldpos_V = Enc_V;
-//            DispEncV = Disp3s;
-//          }
-//
-//
-//
-//          EncoderSpeed_I = ((Enc_I - oldpos_I) * (1000 / SampleTimeEncSpeed));  // speed in clicks/sec
-//          if (EncoderSpeed_I > MINEncoderSpeed)
-//          {
-//            if(Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I > htim1.Init.Period)
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim1, htim1.Init.Period);
-////              HTIM_PWM_CURR.Instance -> CCR1 = htim1.Init.Period;
-//              oldpos_I = htim1.Init.Period;
-//              Enc_I = oldpos_I;
-//            }
-//            else
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim1,Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-////              HTIM_PWM_CURR.Instance -> CCR1 = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
-//              oldpos_I = Enc_I + (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
-//              Enc_I = oldpos_I;
-//            }
-//            DispEncI = Disp3s;
-//          }
-//          else if (EncoderSpeed_I < -MINEncoderSpeed)
-//          {
-//            if(Enc_I < (1000 / SampleTimeEncSpeed) * EncoderSpeed_I)
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim1, 0);
-////              HTIM_PWM_CURR.Instance -> CCR1 = 0;
-//              oldpos_I = 0;
-//              Enc_I = 0;
-//            }
-//            else
-//            {
-//              __HAL_TIM_SET_COUNTER(&htim1,Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I);
-////              HTIM_PWM_CURR.Instance -> CCR1 = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
-//              oldpos_I = Enc_I - (1000 / SampleTimeEncSpeed) * EncoderSpeed_I;
-//              Enc_I = oldpos_I;
-//            }
-//            DispEncI = Disp3s;
-//          }
-//          else if ((EncoderSpeed_I > 0) | (EncoderSpeed_I < 0))
-//          {
-////            HTIM_PWM_CURR.Instance -> CCR1 = Enc_I;
-//            oldpos_I = Enc_I;
-//            DispEncI = Disp3s;
-//          }
-//        }
-//
-//  
-  
-  
+      
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
