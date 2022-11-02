@@ -107,12 +107,54 @@ void Error_Handler(void);
 #define HTIM_PWM_CURR       htim16
 #define HTIM_PWM_VOL        htim17
 
+
+#define LED_Num         98
+#define ADC_V           AData [0]
+#define ADC_I           AData [1]
+#define ADC_I_USB       AData [2]
+#define LEDM1Num        81
+#define LEDM2Num        82
+#define LEDM3Num        83
+#define LEDM4Num        84
+#define LEDOVPNum       85
+#define LEDOCPNum       86
+#define LEDLockNum      87
+#define LEDOUTNum       88
+#define RelOutNum       89
+#define MAXReadEXI      100
+#define CorReadEXI      85
+
+#define LBVolM1Mem          10
+#define HBVolM1Mem          11
+#define LBCurM1Mem          12
+#define HBCurM1Mem          13
+
+#define LBVolM2Mem          20
+#define HBVolM2Mem          21
+#define LBCurM2Mem          22
+#define HBCurM2Mem          23
+
+#define LBVolM3Mem          30
+#define HBVolM3Mem          31
+#define LBCurM3Mem          32
+#define HBCurM3Mem          33
+
+#define LBVolM4Mem          40
+#define HBVolM4Mem          41
+#define LBCurM4Mem          42
+#define HBCurM4Mem          43
+#define OfsV            0
+#define OfsI            4
+#define VolLoc            32
+#define CurLoc            0
+#define VoltMAX         51200
+
 typedef struct
 {
 	uint16_t Volt;
 	uint8_t Status;
 	uint8_t Mem;
-        int32_t Enc;
+        uint16_t Enc;
         int16_t SpdEnc;
         int16_t OldEnc;
         uint16_t PWM;

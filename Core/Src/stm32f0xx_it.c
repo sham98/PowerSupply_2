@@ -47,9 +47,8 @@ extern TIM_HandleTypeDef htim16;
 extern TIM_HandleTypeDef htim17;
 
 extern uint16_t indx;
-extern uint16_t Change;
-int16_t EncoderSpeed_V = 0, EncoderSpeed_I = 0;
-uint16_t oldpos_V = 0, oldpos_I = 0;
+
+
 extern uint16_t MaxSamEncTime;
 extern uint16_t MinSamEncTime;
 
@@ -271,7 +270,7 @@ void SysTick_Handler(void)
         Curr.Enc = 0;
       }
       Curr.OldEnc = Curr.Enc;
-      __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Curr.Enc);
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
     }    
   }

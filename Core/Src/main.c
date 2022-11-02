@@ -31,46 +31,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_Num         98
-#define ADC_V           AData [0]
-#define ADC_I           AData [1]
-#define ADC_I_USB       AData [2]
-#define LEDM1Num        81
-#define LEDM2Num        82
-#define LEDM3Num        83
-#define LEDM4Num        84
-#define LEDOVPNum       85
-#define LEDOCPNum       86
-#define LEDLockNum      87
-#define LEDOUTNum       88
-#define RelOutNum       89
-#define MAXReadEXI      100
-#define CorReadEXI      85
-
-#define LBVolM1Mem          10
-#define HBVolM1Mem          11
-#define LBCurM1Mem          12
-#define HBCurM1Mem          13
-
-#define LBVolM2Mem          20
-#define HBVolM2Mem          21
-#define LBCurM2Mem          22
-#define HBCurM2Mem          23
-
-#define LBVolM3Mem          30
-#define HBVolM3Mem          31
-#define LBCurM3Mem          32
-#define HBCurM3Mem          33
-
-#define LBVolM4Mem          40
-#define HBVolM4Mem          41
-#define LBCurM4Mem          42
-#define HBCurM4Mem          43
-#define OfsV            0
-#define OfsI            4
-#define VolLoc            32
-#define CurLoc            0
-#define VoltMAX         51200
 
 /* USER CODE END PD */
 
@@ -106,27 +66,25 @@ uint16_t iKepEXI = 1000;
 uint16_t iClkEXI = 100;
 
 uint16_t indx = 0;
-uint16_t Oldindx = 0;
-uint16_t Change = 0;
-uint16_t CountDispEncI = 0;
-uint16_t DispEncI = 0;
+
 uint16_t Disp3s = 30;
 
 uint16_t MaxSamEncTime = 30;
-uint16_t Status = 0;
+
 uint8_t LowByte = 0;
 uint8_t HighByte = 0;
 uint8_t dL = 0;
 uint8_t dH = 0;
 uint8_t cL = 0;
 uint8_t cH = 0;
+
+
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
-int16_t KADCnew = 30;
-int16_t KADCold = 70;
-uint16_t ArrNumFIFO = 1000;
-uint16_t AFIFO [3][1000] = {0};
 
+uint16_t ArrNumFIFO = 360;
+uint16_t AFIFO [3][360] = {0};
+uint16_t MaxArrNumFIFO = 360;
 
 #if IF_Test
 uint16_t iTriInd = 0;
@@ -217,8 +175,8 @@ int main(void)
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
   Curr.EncFactor = 4;
-  Volt.DispFactor0 = - 0.2066;
-  Volt.DispFactor1 = 0.01258;
+  Volt.DispFactor0 = - 20.66;
+  Volt.DispFactor1 = 1.258;
   Curr.DispFactor1 = 1;
   USBCurr.DispFactor1 = 1;
   Curr.Enc = 4000;
@@ -1241,10 +1199,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               }
               else if (iSelEXI == 3)                    // if pin '3' -------->  SI
               {
-                if ((CountDispEncI > 0) & (Curr.Status == OC))                       // if it's still in display encoder
+                if ((Curr.CountDisp > 0) & (Curr.Status == OC))                       // if it's still in display encoder
                 {
                   __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
-                  CountDispEncI = 0;
+                  Curr.CountDisp = 0;
                 }
               }
               else
@@ -1319,20 +1277,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             
             
-            if ((Curr.Status == Nor) | (CountDispEncI == 0))
+            if ((Curr.Status == Nor) | (Curr.CountDisp == 0))
             {
               Curr.DispVolt = Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0;
               Mon4Seg(Curr.DispVolt, CurLoc);
             }
-            else if (CountDispEncI >= Disp3s)
+            else if (Curr.CountDisp >= Disp3s)
             {
-              DispEncI = Curr.Enc / 4;
-              Mon4Seg (DispEncI, CurLoc);
-              CountDispEncI --;
+              Curr.DispEnc = Curr.Enc / 4;
+              Mon4Seg (Curr.DispEnc, CurLoc);
+              Curr.CountDisp --;
             }
-            else if (CountDispEncI > 0)
+            else if (Curr.CountDisp > 0)
             {
-              CountDispEncI --;
+              Curr.CountDisp --;
             }
             
             USBCurr.DispVolt = USBCurr.DispFactor1 * USBCurr.Volt + USBCurr.DispFactor0;
@@ -1369,7 +1327,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
-  ArrNumFIFO = 10;
+//  ArrNumFIFO = 50;
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
   LED_Data [LEDM2Num] = 0;
@@ -1378,7 +1336,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
   if (htim == &HTIM_ENC_VOL)
   {
-    Volt.Enc = (int32_t) __HAL_TIM_GET_COUNTER(htim);
+    Volt.Enc = __HAL_TIM_GET_COUNTER(htim);
     Volt.CountDisp = Disp3s;
     
     if (Volt.Enc > Volt.MaxVolt)
@@ -1386,10 +1344,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       Volt.Enc = Volt.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
     }
-    else if (Volt.Enc < 0)
+    else if (Volt.Enc < 8)
     {
-      Volt.Enc = 0;
-      __HAL_TIM_SET_COUNTER(htim, 0);
+      Volt.Enc = 8;
+      __HAL_TIM_SET_COUNTER(htim, 8);
     }
 
     if (Volt.Status == Nor)                       // if in normal mode set PWM directly
@@ -1399,17 +1357,17 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   }
   else if (htim == &HTIM_ENC_CURR)
   {
-    Curr.Enc = (int32_t) __HAL_TIM_GET_COUNTER(htim);
-    CountDispEncI = Disp3s;
+    Curr.Enc = __HAL_TIM_GET_COUNTER(htim);
+    Curr.CountDisp = Disp3s;
     if (Curr.Enc > Curr.MaxVolt)
     {
       Curr.Enc = Curr.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
     }
-    else if (Curr.Enc < 0)
+    else if (Curr.Enc < 8)
     {
-      Curr.Enc = 0;
-      __HAL_TIM_SET_COUNTER(htim, 0);
+      Curr.Enc = 8;
+      __HAL_TIM_SET_COUNTER(htim, 8);
     }
 
     if (Curr.Status == Nor)                       // if it's still in display encoder
@@ -1433,7 +1391,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
   uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
-  ArrNumFIFO = 1000;
+  ArrNumFIFO = MaxArrNumFIFO;
   for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)            // Array for 3 ADCs
   {
     for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)          // Array sum "ArrNumFIFO" number of ADCs
