@@ -1339,15 +1339,15 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     Volt.Enc = __HAL_TIM_GET_COUNTER(htim);
     Volt.CountDisp = Disp3s;
     
-    if (Volt.Enc > Volt.MaxVolt)
+    if ((Volt.Enc - Volt.OldEnc) > 30000)
+    {
+      Volt.Enc = 0;
+      __HAL_TIM_SET_COUNTER(htim, 0);
+    }
+    else if (Volt.Enc > Volt.MaxVolt)
     {
       Volt.Enc = Volt.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
-    }
-    else if (Volt.Enc < 8)
-    {
-      Volt.Enc = 8;
-      __HAL_TIM_SET_COUNTER(htim, 8);
     }
 
     if (Volt.Status == Nor)                       // if in normal mode set PWM directly
@@ -1359,15 +1359,16 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   {
     Curr.Enc = __HAL_TIM_GET_COUNTER(htim);
     Curr.CountDisp = Disp3s;
-    if (Curr.Enc > Curr.MaxVolt)
+
+    if ((Curr.Enc - Curr.OldEnc) > 30000)
+    {
+      Curr.Enc = 0;
+      __HAL_TIM_SET_COUNTER(htim, 0);
+    }
+    else if (Curr.Enc > Curr.MaxVolt)
     {
       Curr.Enc = Curr.MaxVolt;
       __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
-    }
-    else if (Curr.Enc < 8)
-    {
-      Curr.Enc = 8;
-      __HAL_TIM_SET_COUNTER(htim, 8);
     }
 
     if (Curr.Status == Nor)                       // if it's still in display encoder

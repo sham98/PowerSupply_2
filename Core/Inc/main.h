@@ -156,7 +156,7 @@ typedef struct
 	uint8_t Mem;
         uint16_t Enc;
         int16_t SpdEnc;
-        int16_t OldEnc;
+        uint16_t OldEnc;
         uint16_t PWM;
         uint16_t DispEnc;
         uint16_t CountDisp;
