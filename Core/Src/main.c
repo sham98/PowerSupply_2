@@ -82,10 +82,13 @@ uint8_t cH = 0;
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
 
-uint16_t ArrNumFIFO = 360;
-uint16_t AFIFO [3][360] = {0};
-uint16_t MaxArrNumFIFO = 360;
-
+uint32_t ArrNumFIFO = 20000;
+uint16_t AFIFO [3][10] = {0};
+uint16_t ArrNumMeanFIFO = 1000;
+uint16_t MeanFIFO [3][100] = {0};
+uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
+uint32_t iFilADC = 0;
+  
 #if IF_Test
 uint16_t iTriInd = 0;
 uint16_t ITriIndMax = 1;
@@ -877,29 +880,19 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
       LED_Data [Loc + 8 + iInteger] = *(pBuf2 + iInteger);
     }
   }
+
   LED_Data [Loc + 15] = 1;              // Point
   uint8_t Frac = volt % 100;            // Remainder of divide in 100
-  if (Frac == 0)                        // Locate Remainder in LED_Data and remove zero after one digits
+
+  uint16_t * pBuf1 = SevSegm(Frac / 10);
+  for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
   {
-    uint16_t *pBuf = SevSegm (0);
-    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
-    {
-      LED_Data [Loc + 16 + iFrac] = *(pBuf + iFrac);
-      LED_Data [Loc + 24 + iFrac] = 0;
-    }
+    LED_Data [Loc + 16 + iFrac] = *(pBuf1 + iFrac);
   }
-  else                                  // Locate Remainder in LED_Data
+  uint16_t * pBuf2 = SevSegm(Frac % 10);
+  for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
   {
-    uint16_t * pBuf1 = SevSegm(Frac / 10);
-    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
-    {
-      LED_Data [Loc + 16 + iFrac] = *(pBuf1 + iFrac);
-    }
-    uint16_t * pBuf2 = SevSegm(Frac % 10);
-    for (uint8_t iFrac = 0; iFrac < 8; iFrac ++)
-    {
-      LED_Data [Loc + 24 + iFrac] = *(pBuf2 + iFrac);
-    }
+    LED_Data [Loc + 24 + iFrac] = *(pBuf2 + iFrac);
   }
 }
 
@@ -1391,19 +1384,42 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-  uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
-  ArrNumFIFO = MaxArrNumFIFO;
-  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)            // Array for 3 ADCs
+  uint32_t SumMeanFIFO [3] = {0,0,0};                       // Array sum of ADC values
+
+//  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)            // Array for 3 ADCs
+//  {
+//    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)          // Array sum "ArrNumFIFO" number of ADCs
+//    {
+//      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];            // 
+//      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];                     // sum of ADCs
+//    }
+//    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];                  // fill the last array
+//    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];               // sum the last ADC value
+//  }
+
+
+    iFilADC ++;                  // fill the last array
+    SumFIFO [0] += AData [0];               // sum the last ADC value
+    
+  
+  if (iFilADC >= ArrNumFIFO)
   {
-    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)          // Array sum "ArrNumFIFO" number of ADCs
-    {
-      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];            // 
-      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];                     // sum of ADCs
-    }
-    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];                  // fill the last array
-    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];               // sum the last ADC value
-  }
   Volt.Volt = SumFIFO [0]/ ArrNumFIFO;                                  // average of sum values of Volt
+    iFilADC = 0;                  // fill the last array
+    SumFIFO [0] = 0;               // sum the last ADC value
+//
+//    for (uint8_t iFilMeanADC = 0; iFilMeanADC < 3; iFilMeanADC ++)            // Array for 3 ADCs
+//    {
+//      for (uint16_t iMeanADCFil = 0; iMeanADCFil < ArrNumMeanFIFO - 1; iMeanADCFil ++)          // Array sum "ArrNumFIFO" number of ADCs
+//      {
+//        MeanFIFO [iFilMeanADC] [iMeanADCFil] = MeanFIFO [iFilMeanADC] [iMeanADCFil + 1];            // 
+//        SumMeanFIFO [iFilMeanADC] += MeanFIFO [iFilMeanADC] [iMeanADCFil];                     // sum of ADCs
+//      }
+//      MeanFIFO [iFilMeanADC][ArrNumMeanFIFO - 1] = SumFIFO [iFilMeanADC] / ArrNumFIFO;                  // fill the last array
+//      SumMeanFIFO [iFilMeanADC] += MeanFIFO [iFilMeanADC][ArrNumMeanFIFO - 1];               // sum the last ADC value
+//    }
+//  }  
+  
   Curr.Volt = SumFIFO [1]/ ArrNumFIFO;                                  // average of sum values of Current
   USBCurr.Volt = SumFIFO [2]/ ArrNumFIFO;                               // average of sum values of USB current
 
@@ -1426,7 +1442,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     }
   }
 }
-
+}
 
 /**
   * @brief  EXTI line detection callback.
