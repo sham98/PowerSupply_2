@@ -251,7 +251,12 @@ void SysTick_Handler(void)
 
       if (Curr.SpdEnc >= MaxEncSpeed)
       {
-        Curr.Enc = Kmin * 400 + Curr.Enc;
+        int32_t TempCurr = Kmin * 400 + Curr.Enc;
+        if (TempCurr < 0)
+        {
+          Curr.Enc = 0;
+        }
+        else if (TempCurr > 
       }
       else if (Curr.SpdEnc <= MinEncSpeed)
       {
