@@ -79,8 +79,8 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint8_t Knew = 10;
-uint8_t Kold = 90;
+uint8_t Knew = 5;
+uint8_t Kold = 95;
 
 
 int16_t MaxEncSpeed = 15;
@@ -1261,7 +1261,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *******************************************************************/
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
-              Volt.DispVolt = Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0;
+              int32_t TempDisp = Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0;
+              if (TempDisp > 0)
+                Volt.DispVolt = TempDisp;
+              else
+                Volt.DispVolt = 0;
               Mon4Seg(Volt.DispVolt, VolLoc);
             }
             else if (Volt.CountDisp >= Disp3s)

@@ -210,14 +210,38 @@ void SysTick_Handler(void)
 
       if (Volt.SpdEnc >= MaxEncSpeed)
       {
-        Volt.Enc = Kmin * 400 + Volt.Enc;
+        int32_t TempVolt = Kmin * 400 + Volt.Enc;
+        if (TempVolt > HTIM_ENC_VOL.Init.Period)
+        {
+          Volt.Enc = HTIM_ENC_VOL.Init.Period;
+        }
+        else if (TempVolt < 0)
+        {
+          Volt.Enc = 0;
+        }
+        else
+        {
+          Volt.Enc = TempVolt;
+        }
       }
       else if (Volt.SpdEnc <= MinEncSpeed)
       {
       }
       else 
       {
-        Volt.Enc = Volt.Enc + Kmin * (- 140 + 36 * Volt.SpdEnc) ;
+        int32_t TempVolt = Volt.Enc + Kmin * (- 140 + 36 * Volt.SpdEnc) ;
+        if (TempVolt > HTIM_ENC_VOL.Init.Period)
+        {
+          Volt.Enc = HTIM_ENC_VOL.Init.Period;
+        }
+        else if (TempVolt < 0)
+        {
+          Volt.Enc = 0;
+        }
+        else
+        {
+          Volt.Enc = TempVolt;
+        }
       }
       
       if (Volt.Enc > Volt.MaxVolt)
@@ -256,14 +280,33 @@ void SysTick_Handler(void)
         {
           Curr.Enc = 0;
         }
-        else if (TempCurr > 
+        else if (TempCurr > HTIM_ENC_CURR.Init.Period)
+        {
+          Curr.Enc = HTIM_ENC_CURR.Init.Period;
+        }
+        else
+        {
+          Curr.Enc = TempCurr;
+        }
       }
       else if (Curr.SpdEnc <= MinEncSpeed)
       {
       }
       else 
       {
-        Curr.Enc = Curr.Enc + Kmin * (- 140 + 36 * Curr.SpdEnc) ;
+        int32_t TempCurr = Curr.Enc + Kmin * (- 140 + 36 * Curr.SpdEnc) ;
+        if (TempCurr < 0)
+        {
+          Curr.Enc = 0;
+        }
+        else if (TempCurr > HTIM_ENC_CURR.Init.Period)
+        {
+          Curr.Enc = HTIM_ENC_CURR.Init.Period;
+        }
+        else
+        {
+          Curr.Enc = TempCurr;
+        }
       }
       
       if (Curr.Enc > Curr.MaxVolt)
