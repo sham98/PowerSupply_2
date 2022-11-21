@@ -101,7 +101,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 #define IF_Nor          0
-#define IF_Test         0
+#define IF_Test         1
 #define HTIM_ENC_CURR       htim1
 #define HTIM_ENC_VOL        htim3
 #define HTIM_PWM_CURR       htim16
