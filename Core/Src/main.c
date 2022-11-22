@@ -86,8 +86,8 @@ uint8_t Kold = 95;
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
 
-uint32_t ArrNumFIFO = 350;
-uint32_t MaxArrNumFIFO = 350;
+uint32_t ArrNumFIFO = 100;
+//uint32_t MaxArrNumFIFO = 350;
 
 uint16_t AFIFO [3][350] = {0};
 uint16_t ArrNumMeanFIFO = 1000;
@@ -203,6 +203,15 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
+
+//  HAL_Delay(500);
+//  uint16_t TempVolt = Volt.Volt;
+//  while (Volt.Volt < 1.2 * TempVolt)
+//  {
+//    Volt.Enc ++;
+//    __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
+//  }
+
 
   /* USER CODE END 2 */
 
@@ -1259,6 +1268,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *      LED_Data buffer filling
            *
            *******************************************************************/
+//            Volt.Err = 100 * Volt.Enc - Volt.Volt;
+//            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Err);
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
               int32_t TempDisp = Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0;
@@ -1341,8 +1352,9 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   {
     Volt.Enc = __HAL_TIM_GET_COUNTER(htim);
     Volt.CountDisp = Disp3s;
+    int16_t TempVoltEnc = Volt.Enc - Volt.OldEnc;
     
-    if ((Volt.Enc - Volt.OldEnc) > 30000)
+    if (TempVoltEnc > 30000)
     {
       Volt.Enc = 0;
       __HAL_TIM_SET_COUNTER(htim, 0);
@@ -1355,7 +1367,8 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
     if (Volt.Status == Nor)                       // if in normal mode set PWM directly
     {
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Enc / Volt.EncFactor);
+      Volt.PWM = Volt.Enc / Volt.EncFactor;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
     }
   }
   else if (htim == &HTIM_ENC_CURR)
@@ -1376,7 +1389,8 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
     if (Curr.Status == Nor)                       // if it's still in display encoder
     {
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc);
+      Curr.PWM = Curr.Enc / Curr.EncFactor;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
     }
   }
   
@@ -1407,9 +1421,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
   }
   
-  Volt.Volt = (Knew * (SumFIFO [0] / ArrNumFIFO) + Kold * (Volt.Volt)) / 100;
-  Curr.Volt = SumFIFO [1]/ ArrNumFIFO;
-  USBCurr.Volt = SumFIFO [2]/ ArrNumFIFO;
+  Volt.Volt = (Knew * (SumFIFO [0] / ArrNumFIFO) + Kold * Volt.Volt) / 100;
+  Curr.Volt = (Knew * (SumFIFO [1]/ ArrNumFIFO) + Kold * Curr.Volt) / 100;
+  USBCurr.Volt = (Knew * (SumFIFO [2]/ ArrNumFIFO) + Kold * USBCurr.Volt) / 100;
 
   
   
