@@ -82,6 +82,9 @@ uint8_t cH = 0;
 uint8_t Knew = 5;
 uint8_t Kold = 95;
 
+uint8_t InitFlag = 0;
+uint8_t InitCount = 0;
+uint8_t MaxInitCount = 100;
 
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
@@ -203,14 +206,6 @@ int main(void)
 
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
-
-//  HAL_Delay(500);
-//  uint16_t TempVolt = Volt.Volt;
-//  while (Volt.Volt < 1.2 * TempVolt)
-//  {
-//    Volt.Enc ++;
-//    __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
-//  }
 
 
   /* USER CODE END 2 */
@@ -949,6 +944,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
+          
+          
+          if (InitFlag == 0)
+          {
+            if (InitCount < MaxInitCount)
+            {
+              InitCount ++;
+            }
+            else
+            {
+              InitFlag = 1;
+              uint16_t TempVolt = Volt.Volt;
+              while (Volt.Volt < 1.2 * TempVolt)
+              {
+                Volt.Enc ++;
+                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
+              }              
+            }
+          }
 /*
  *
  *      Extrnal Interrupt
