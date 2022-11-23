@@ -162,6 +162,7 @@ typedef struct
         uint16_t CountDisp;
         uint8_t  Out;
         uint16_t MaxVolt;
+        uint16_t MinVolt;
         uint16_t EncFactor;
         float DispFactor1;
         float DispFactor0;

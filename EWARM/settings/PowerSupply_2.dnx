@@ -16,19 +16,19 @@
         <MemConfigValue>C:\Program Files\IAR Systems\Embedded Workbench 9.1\arm\CONFIG\debugger\ST\STM32F030K6.ddf</MemConfigValue>
     </PlDriver>
     <ArmDriver>
-        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
         <EnableCache>0</EnableCache>
+        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
     </ArmDriver>
     <StLinkDriver>
         <stlinkserialNo>608D000132124647524B4E00</stlinkserialNo>
         <stlinkfoundProbes />
-        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
-        <CStepIntDis>_ 0</CStepIntDis>
         <stlinkResetStyle>0</stlinkResetStyle>
         <stlinkResetStrategy>2</stlinkResetStrategy>
+        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>3356636917</Checksum>
+        <Checksum>2622369452</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -44,6 +44,11 @@
     <CallStack>
         <ShowArgs>0</ShowArgs>
     </CallStack>
+    <LogFile>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ "$PROJ_DIR$\LogFile1.log"</LogFile>
+        <Category2>_ 2</Category2>
+    </LogFile>
     <watch_formats>
         <Fmt0>{W}42:Knew	3	0</Fmt0>
         <Fmt1>{W}42:Kold	3	0</Fmt1>
@@ -59,16 +64,12 @@
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>
     </TermIOLog>
-    <LogFile>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ "$PROJ_DIR$\LogFile1.log"</LogFile>
-        <Category2>_ 2</Category2>
-    </LogFile>
     <DisassembleMode>
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Count>0</Count>
+        <Bp0>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\Core\Src\main.c}.1438.3" 0 0 1 "" 0 "" 0</Bp0>
+        <Count>1</Count>
     </Breakpoints2>
     <Aliases>
         <Count>0</Count>

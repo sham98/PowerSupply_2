@@ -194,7 +194,6 @@ int main(void)
   Curr.Enc = 4000;
   __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
 
-
   HAL_TIM_Encoder_Start_IT(&HTIM_ENC_CURR, TIM_CHANNEL_ALL);    // Encoder Current PWM
   HAL_TIM_Encoder_Start_IT(&HTIM_ENC_VOL, TIM_CHANNEL_ALL);    // Encoder Voltage PWM
 
@@ -665,7 +664,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
 }
@@ -960,7 +959,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               {
                 Volt.Enc ++;
                 __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
-              }              
+              }
+//              Volt.MinVolt = 
             }
           }
 /*
