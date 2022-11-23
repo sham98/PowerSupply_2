@@ -58,6 +58,10 @@ extern uint16_t Disp3s;
 extern int16_t MaxEncSpeed;
 extern int16_t MinEncSpeed;
 
+extern float Kp;
+extern float Ki;
+
+
 uint8_t InitFlag = 0;
 uint8_t FirsRead = 0;
 uint16_t InitCount = 0;
@@ -196,7 +200,7 @@ void SysTick_Handler(void)
 
   
   
-  if (InitFlag == 0)
+  if (InitFlag == 0)            // Zero offset
   {
     if (InitCount < MaxInitCount)
     {
@@ -211,18 +215,39 @@ void SysTick_Handler(void)
       }
       if (Volt.Volt < 1.005 * TempVolt)
       {
-        Volt.Enc ++;
-        __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
+        Volt.PWM ++;
+        __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
       }
       else
         InitFlag = 1;
 //              Volt.MinVolt = 
     }
   }
-
-  
-  
-  
+  else
+  {             //   PI 
+    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
+    Volt.SumErr = Volt.SumErr + Volt.Err;
+    
+    if (Volt.SumErr < -50000)
+    {
+      Volt.SumErr = -50000;
+    }
+    else if (Volt.SumErr > 50000)
+    {
+      Volt.SumErr = 50000;
+    }
+    
+    Volt.PWM = Kp * Volt.Err + Ki * Volt.SumErr;
+    if (Volt.PWM < 0)
+    {
+      Volt.PWM = 0;
+    }
+    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
+    {
+      Volt.PWM = HTIM_PWM_VOL.Init.Period;
+    }
+    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+  }
   
   int8_t Kmin = 1;
   indx ++;

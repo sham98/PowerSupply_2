@@ -148,7 +148,7 @@ void Error_Handler(void);
 #define VolLoc            32
 #define CurLoc            0
 #define VoltMAX         51200
-
+#define VOLT2ENC        16
 typedef struct
 {
 	uint16_t Volt;
@@ -167,7 +167,8 @@ typedef struct
         float DispFactor1;
         float DispFactor0;
         uint16_t DispVolt;
-        int16_t Err;
+        int32_t Err;
+        int32_t SumErr;
 }Monitor;
 
 /* USER CODE END Private defines */

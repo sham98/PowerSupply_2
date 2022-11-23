@@ -82,6 +82,8 @@ uint8_t cH = 0;
 uint8_t Knew = 100;
 uint8_t Kold = 0;
 
+float Kp = 1.32;
+float Ki = 4.7482;
 
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
@@ -1261,8 +1263,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *      LED_Data buffer filling
            *
            *******************************************************************/
-//            Volt.Err = 100 * Volt.Enc - Volt.Volt;
-//            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Err);
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
               int32_t TempDisp = (Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0);
@@ -1358,11 +1358,11 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
     }
 
-    if (Volt.Status == Nor)                       // if in normal mode set PWM directly
-    {
-      Volt.PWM = Volt.Enc / Volt.EncFactor;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
-    }
+//    if (Volt.Status == Nor)                       // if in normal mode set PWM directly
+//    {
+//      Volt.PWM = Volt.Enc / Volt.EncFactor;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+//    }
   }
   else if (htim == &HTIM_ENC_CURR)
   {
