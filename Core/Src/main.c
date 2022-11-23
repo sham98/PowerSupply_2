@@ -79,22 +79,19 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint8_t Knew = 5;
-uint8_t Kold = 95;
+uint8_t Knew = 100;
+uint8_t Kold = 0;
 
-uint8_t InitFlag = 0;
-uint8_t InitCount = 0;
-uint8_t MaxInitCount = 100;
 
 int16_t MaxEncSpeed = 15;
 int16_t MinEncSpeed = 4;
 
-uint32_t ArrNumFIFO = 100;
-//uint32_t MaxArrNumFIFO = 350;
+uint32_t ArrNumFIFO = 0;
+uint32_t MaxArrNumFIFO = 350;
 
 uint16_t AFIFO [3][350] = {0};
-uint16_t ArrNumMeanFIFO = 1000;
-uint16_t MeanFIFO [3][100] = {0};
+//uint16_t ArrNumMeanFIFO = 1000;
+//uint16_t MeanFIFO [3][100] = {0};
 uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
 uint32_t iFilADC = 0;
   
@@ -187,8 +184,8 @@ int main(void)
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
   Curr.EncFactor = 4;
-  Volt.DispFactor0 = - 20.66;
-  Volt.DispFactor1 = 1.258;
+  Volt.DispFactor0 = - 15.69;
+  Volt.DispFactor1 = 0.8464;
   Curr.DispFactor1 = 1;
   USBCurr.DispFactor1 = 1;
   Curr.Enc = 4000;
@@ -945,24 +942,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
           
           
-          if (InitFlag == 0)
-          {
-            if (InitCount < MaxInitCount)
-            {
-              InitCount ++;
-            }
-            else
-            {
-              InitFlag = 1;
-              uint16_t TempVolt = Volt.Volt;
-              while (Volt.Volt < 1.2 * TempVolt)
-              {
-                Volt.Enc ++;
-                __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
-              }
-//              Volt.MinVolt = 
-            }
-          }
 /*
  *
  *      Extrnal Interrupt
@@ -1286,7 +1265,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.Err);
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
-              int32_t TempDisp = Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0;
+              int32_t TempDisp = (Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0);
               if (TempDisp > 0)
                 Volt.DispVolt = TempDisp;
               else
@@ -1355,7 +1334,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
-  ArrNumFIFO = 10;
+//  ArrNumFIFO = 10;
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
   LED_Data [LEDM2Num] = 0;
@@ -1422,8 +1401,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-
   uint32_t SumFIFO [3] = {0,0,0};
+  ArrNumFIFO = MaxArrNumFIFO;
+
+
   for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)
   {
     for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)

@@ -58,6 +58,11 @@ extern uint16_t Disp3s;
 extern int16_t MaxEncSpeed;
 extern int16_t MinEncSpeed;
 
+uint8_t InitFlag = 0;
+uint8_t FirsRead = 0;
+uint16_t InitCount = 0;
+uint16_t MaxInitCount = 3000;
+uint16_t TempVolt = 0;
 
 #if IF_Test
 extern uint16_t iTriInd;
@@ -189,6 +194,36 @@ void SysTick_Handler(void)
   }  
 #endif
 
+  
+  
+  if (InitFlag == 0)
+  {
+    if (InitCount < MaxInitCount)
+    {
+      InitCount ++;
+    }
+    else
+    {
+      if (FirsRead == 0)
+      {
+        TempVolt = Volt.Volt;
+        FirsRead = 1;
+      }
+      if (Volt.Volt < 1.005 * TempVolt)
+      {
+        Volt.Enc ++;
+        __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
+      }
+      else
+        InitFlag = 1;
+//              Volt.MinVolt = 
+    }
+  }
+
+  
+  
+  
+  
   int8_t Kmin = 1;
   indx ++;
   if (indx >= MaxSamEncTime)
