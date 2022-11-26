@@ -106,6 +106,13 @@ void Error_Handler(void);
 #define HTIM_ENC_VOL        htim3
 #define HTIM_PWM_CURR       htim16
 #define HTIM_PWM_VOL        htim17
+#define MAXSumError         50000
+
+#define MaxEncSpeed             15
+#define MinEncSpeed             4
+#define MaxSamEncTime    30
+#define iKepEXI         1000
+#define iClkEXI         100
 
 
 #define LED_Num         98
@@ -148,7 +155,7 @@ void Error_Handler(void);
 #define VolLoc            32
 #define CurLoc            0
 #define VoltMAX         51200
-#define VOLT2ENC        16
+//#define VOLT2ENC        16
 typedef struct
 {
 	uint16_t Volt;
@@ -157,7 +164,7 @@ typedef struct
         uint16_t Enc;
         int16_t SpdEnc;
         uint16_t OldEnc;
-        uint16_t PWM;
+        int32_t PWM;
         uint16_t DispEnc;
         uint16_t CountDisp;
         uint8_t  Out;
@@ -168,6 +175,8 @@ typedef struct
         float DispFactor0;
         uint16_t DispVolt;
         int32_t Err;
+        int32_t DErr;
+        int32_t OldErr;
         int32_t SumErr;
 }Monitor;
 

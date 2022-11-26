@@ -62,14 +62,14 @@ uint8_t EXIS1PrvPrs [4] = {0};
 uint8_t EXIS2PrvPrs [4] = {0};
 uint16_t iEXIS1Prs [5] = {0,0,0,0};
 uint16_t iPrsEXIS2 [5] = {0,0,0,0};
-uint16_t iKepEXI = 1000;
-uint16_t iClkEXI = 100;
+//uint16_t iKepEXI = 1000;
+//uint16_t iClkEXI = 100;
 
 uint16_t indx = 0;
 
 uint16_t Disp3s = 30;
 
-uint16_t MaxSamEncTime = 30;
+//uint16_t MaxSamEncTime = 30;
 
 uint8_t LowByte = 0;
 uint8_t HighByte = 0;
@@ -79,14 +79,19 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint8_t Knew = 100;
-uint8_t Kold = 0;
+//uint8_t Knew = 100;
+//uint8_t Kold = 0;
 
-float Kp = 1.32;
-float Ki = 4.7482;
+uint8_t PIDEn = 0;
+//int32_t MAXSumError = 50000000;
+float Kp = 0;
+float Ki = 0;
+float Kd = 0;
 
-int16_t MaxEncSpeed = 15;
-int16_t MinEncSpeed = 4;
+uint8_t VOLT2ENC = 0;
+
+//int16_t MaxEncSpeed = 15;
+//int16_t MinEncSpeed = 4;
 
 uint32_t ArrNumFIFO = 0;
 uint32_t MaxArrNumFIFO = 350;
@@ -943,6 +948,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
           
+  if (PIDEn == 1)
+  {             //   PI 
+    Volt.OldErr = Volt.Err;
+    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
+    Volt.DErr = Volt.Err - Volt.OldErr;
+    Volt.SumErr = Volt.SumErr + Ki * Volt.Err;
+    
+    if (Volt.SumErr < -MAXSumError)
+    {
+      Volt.SumErr = -MAXSumError;
+    }
+    else if (Volt.SumErr > MAXSumError)
+    {
+      Volt.SumErr = MAXSumError;
+    }
+    
+    Volt.PWM = Kp * Volt.Err + Volt.SumErr - Kd * Volt.DErr;
+    if (Volt.PWM < 0)
+    {
+      Volt.PWM = 0;
+    }
+    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
+    {
+      Volt.PWM = HTIM_PWM_VOL.Init.Period;
+    }
+    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+  }
+
           
 /*
  *
@@ -1416,9 +1449,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
     SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
   }
   
-  Volt.Volt = (Knew * (SumFIFO [0] / ArrNumFIFO) + Kold * Volt.Volt) / 100;
-  Curr.Volt = (Knew * (SumFIFO [1]/ ArrNumFIFO) + Kold * Curr.Volt) / 100;
-  USBCurr.Volt = (Knew * (SumFIFO [2]/ ArrNumFIFO) + Kold * USBCurr.Volt) / 100;
+  Volt.Volt = (100 * (SumFIFO [0] / ArrNumFIFO) + 0 * Volt.Volt) / 100;
+  Curr.Volt = (100 * (SumFIFO [1]/ ArrNumFIFO) + 0 * Curr.Volt) / 100;
+  USBCurr.Volt = (100 * (SumFIFO [2]/ ArrNumFIFO) + 0 * USBCurr.Volt) / 100;
 
   
   

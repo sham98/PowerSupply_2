@@ -49,18 +49,22 @@ extern TIM_HandleTypeDef htim17;
 extern uint16_t indx;
 
 
-extern uint16_t MaxSamEncTime;
+//extern uint16_t MaxSamEncTime;
 extern uint16_t MinSamEncTime;
 
 extern Monitor Volt, Curr, USBCurr;
 extern uint16_t Disp3s;
 
-extern int16_t MaxEncSpeed;
-extern int16_t MinEncSpeed;
+//extern int16_t MaxEncSpeed;
+//extern int16_t MinEncSpeed;
 
-extern float Kp;
-extern float Ki;
-
+//extern float Kp;
+//extern float Ki;
+//extern float Kd;
+//extern uint8_t VOLT2ENC;
+//
+//extern uint8_t PIDEn;
+//extern int32_t MAXSumError;
 
 uint8_t InitFlag = 0;
 uint8_t FirsRead = 0;
@@ -222,31 +226,6 @@ void SysTick_Handler(void)
         InitFlag = 1;
 //              Volt.MinVolt = 
     }
-  }
-  else
-  {             //   PI 
-    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
-    Volt.SumErr = Volt.SumErr + Volt.Err;
-    
-    if (Volt.SumErr < -50000)
-    {
-      Volt.SumErr = -50000;
-    }
-    else if (Volt.SumErr > 50000)
-    {
-      Volt.SumErr = 50000;
-    }
-    
-    Volt.PWM = Kp * Volt.Err + Ki * Volt.SumErr;
-    if (Volt.PWM < 0)
-    {
-      Volt.PWM = 0;
-    }
-    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
-    {
-      Volt.PWM = HTIM_PWM_VOL.Init.Period;
-    }
-    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
   }
   
   int8_t Kmin = 1;
