@@ -87,6 +87,13 @@ uint8_t cH = 0;
 
 uint8_t PIDEn = 0;
 float error = 0;
+uint16_t MaxCountPID = 5000;
+uint16_t MaxiPIDSwitch = 100;
+uint8_t InitFlag = 0;
+uint8_t FirsRead = 0;
+uint16_t InitCount = 0;
+uint16_t MaxInitCount = 3000;
+uint16_t TempVolt = 0;
 //int32_t MAXSumError = 50000000;
 //float Kp = 0;
 //float Ki = 0;
@@ -193,7 +200,10 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  pid.tau = 0.02;
+  pid.Kp = 6;
+  pid.Ki = 3;
+  pid.Kd = 0.5;
+  pid.tau = 0.0002;
   pid.limMax = 12800;
   pid.limMin = 0;
   pid.limMaxInt = 50000;
@@ -961,38 +971,48 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
-          HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
-  if (PIDEn == 1)
-  {             //   PI 
-    Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
+          
 
-//    Volt.OldErr = Volt.Err;
-//    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
-//    Volt.DErr = Volt.Err - Volt.OldErr;
-//    Volt.SumErr = Volt.SumErr + Ki * Volt.Err;
-//    
-//    if (Volt.SumErr < -MAXSumError)
-//    {
-//      Volt.SumErr = -MAXSumError;
-//    }
-//    else if (Volt.SumErr > MAXSumError)
-//    {
-//      Volt.SumErr = MAXSumError;
-//    }
-//    
-//    Volt.PWM = Kp * Volt.Err + Volt.SumErr - Kd * Volt.DErr;
-//    if (Volt.PWM < 0)
-//    {
-//      Volt.PWM = 0;
-//    }
-//    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
-//    {
-//      Volt.PWM = HTIM_PWM_VOL.Init.Period;
-//    }
-//    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
-  }
-    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
-
+          if (InitFlag == 0)            // Zero offset
+          {
+            if (InitCount < MaxInitCount)
+            {
+              InitCount ++;
+            }
+            else
+            {
+              if (FirsRead == 0)
+              {
+                TempVolt = Volt.Volt;
+                FirsRead = 1;
+              }
+              if (Volt.Volt < 1.005 * TempVolt)
+              {
+                Volt.PWM ++;
+                __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+              }
+              else
+                InitFlag = 1;
+        //              Volt.MinVolt = 
+            }
+          }
+          else
+          {
+            if (Volt.CountPID > MaxCountPID)
+            {
+              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+            }
+            else if (Volt.CountPID == MaxCountPID)
+            {
+              Volt.CountPID ++;
+              Volt.SP = Volt.Volt;
+            }
+            else
+            {
+              Volt.CountPID ++;
+            }
+            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+          }
           
 /*
  *
@@ -1408,11 +1428,12 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COUNTER(htim, Volt.Enc);
     }
 
-//    if (Volt.Status == Nor)                       // if in normal mode set PWM directly
-//    {
-//      Volt.PWM = Volt.Enc / Volt.EncFactor;
-//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
-//    }
+    if (Volt.Status == Nor)                       // if in normal mode set PWM directly
+    {
+      Volt.PWM = Volt.Enc / Volt.EncFactor;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+      Volt.CountPID = 0;
+    }
   }
   else if (htim == &HTIM_ENC_CURR)
   {

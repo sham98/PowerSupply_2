@@ -102,6 +102,7 @@ void Error_Handler(void);
 
 #define IF_Nor          0
 #define IF_Test         0
+#define PIDTunning      0
 #define HTIM_ENC_CURR       htim1
 #define HTIM_ENC_VOL        htim3
 #define HTIM_PWM_CURR       htim16
@@ -177,11 +178,13 @@ typedef struct
 	uint8_t Status;
 	uint8_t Mem;
         uint16_t Enc;
+        uint16_t SP;
         int16_t SpdEnc;
         uint16_t OldEnc;
         int32_t PWM;
         uint16_t DispEnc;
         uint16_t CountDisp;
+        uint16_t CountPID;
         uint8_t  Out;
         uint16_t MaxVolt;
         uint16_t MinVolt;

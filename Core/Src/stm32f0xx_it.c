@@ -54,6 +54,7 @@ extern uint16_t MinSamEncTime;
 
 extern Monitor Volt, Curr, USBCurr;
 extern uint16_t Disp3s;
+extern uint16_t MaxiPIDSwitch;
 
 //extern int16_t MaxEncSpeed;
 //extern int16_t MinEncSpeed;
@@ -65,13 +66,8 @@ extern uint16_t Disp3s;
 //
 //extern uint8_t PIDEn;
 //extern int32_t MAXSumError;
-
-uint8_t InitFlag = 0;
-uint8_t FirsRead = 0;
-uint16_t InitCount = 0;
-uint16_t MaxInitCount = 3000;
-uint16_t TempVolt = 0;
-
+uint16_t iPIDSwitch = 0;
+uint8_t PIDSwitch = 0;
 #if IF_Test
 extern uint16_t iTriInd;
 extern uint16_t ITriIndMax;
@@ -202,31 +198,28 @@ void SysTick_Handler(void)
   }  
 #endif
 
-  
-  
-  if (InitFlag == 0)            // Zero offset
+#if PIDTunning
+  if (iPIDSwitch > MaxiPIDSwitch)
   {
-    if (InitCount < MaxInitCount)
+    iPIDSwitch = 0;
+    if (PIDSwitch == 0)
     {
-      InitCount ++;
+      PIDSwitch = 1;
+      Volt.PWM = 20000 / Volt.EncFactor;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+      Volt.CountPID = 0;
     }
     else
     {
-      if (FirsRead == 0)
-      {
-        TempVolt = Volt.Volt;
-        FirsRead = 1;
-      }
-      if (Volt.Volt < 1.005 * TempVolt)
-      {
-        Volt.PWM ++;
-        __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
-      }
-      else
-        InitFlag = 1;
-//              Volt.MinVolt = 
+      PIDSwitch = 0;      
+      Volt.PWM = 25000 / Volt.EncFactor;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+      Volt.CountPID = 0;
     }
   }
+  else
+    iPIDSwitch ++;
+#endif  
   
   int8_t Kmin = 1;
   indx ++;
