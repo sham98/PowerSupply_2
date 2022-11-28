@@ -21,7 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "PID.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,20 +86,22 @@ uint8_t cH = 0;
 //uint8_t Kold = 0;
 
 uint8_t PIDEn = 0;
+float error = 0;
 //int32_t MAXSumError = 50000000;
-float Kp = 0;
-float Ki = 0;
-float Kd = 0;
+//float Kp = 0;
+//float Ki = 0;
+//float Kd = 0;
+//float Tau = 0.02;
 
-uint8_t VOLT2ENC = 0;
+uint8_t VOLT2ENC = 12;
 
 //int16_t MaxEncSpeed = 15;
 //int16_t MinEncSpeed = 4;
 
 uint32_t ArrNumFIFO = 0;
-uint32_t MaxArrNumFIFO = 350;
+uint32_t MaxArrNumFIFO = 300;
 
-uint16_t AFIFO [3][350] = {0};
+uint16_t AFIFO [3][300] = {0};
 //uint16_t ArrNumMeanFIFO = 1000;
 //uint16_t MeanFIFO [3][100] = {0};
 uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
@@ -123,8 +128,10 @@ enum
 };
 
 
-Monitor Volt, Curr, USBCurr;
+PIDController pid;
 
+Monitor Volt, Curr;
+MonitorUSB USBCurr;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -186,7 +193,13 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  
+  pid.tau = 0.02;
+  pid.limMax = 12800;
+  pid.limMin = 0;
+  pid.limMaxInt = 50000;
+  pid.limMinInt = -50000;
+  pid.T = 0.000225;
+
   Volt.MaxVolt = VoltMAX;
   Curr.MaxVolt = VoltMAX;
   Volt.EncFactor = 4;
@@ -210,6 +223,7 @@ int main(void)
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
 
+    PIDController_Init(&pid);
 
   /* USER CODE END 2 */
 
@@ -947,34 +961,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim == &htim14)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
-          
+          HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
   if (PIDEn == 1)
   {             //   PI 
-    Volt.OldErr = Volt.Err;
-    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
-    Volt.DErr = Volt.Err - Volt.OldErr;
-    Volt.SumErr = Volt.SumErr + Ki * Volt.Err;
-    
-    if (Volt.SumErr < -MAXSumError)
-    {
-      Volt.SumErr = -MAXSumError;
-    }
-    else if (Volt.SumErr > MAXSumError)
-    {
-      Volt.SumErr = MAXSumError;
-    }
-    
-    Volt.PWM = Kp * Volt.Err + Volt.SumErr - Kd * Volt.DErr;
-    if (Volt.PWM < 0)
-    {
-      Volt.PWM = 0;
-    }
-    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
-    {
-      Volt.PWM = HTIM_PWM_VOL.Init.Period;
-    }
-    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+    Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
+
+//    Volt.OldErr = Volt.Err;
+//    Volt.Err = Volt.Enc - VOLT2ENC * Volt.Volt;
+//    Volt.DErr = Volt.Err - Volt.OldErr;
+//    Volt.SumErr = Volt.SumErr + Ki * Volt.Err;
+//    
+//    if (Volt.SumErr < -MAXSumError)
+//    {
+//      Volt.SumErr = -MAXSumError;
+//    }
+//    else if (Volt.SumErr > MAXSumError)
+//    {
+//      Volt.SumErr = MAXSumError;
+//    }
+//    
+//    Volt.PWM = Kp * Volt.Err + Volt.SumErr - Kd * Volt.DErr;
+//    if (Volt.PWM < 0)
+//    {
+//      Volt.PWM = 0;
+//    }
+//    else if (Volt.PWM > HTIM_PWM_VOL.Init.Period)
+//    {
+//      Volt.PWM = HTIM_PWM_VOL.Init.Period;
+//    }
+//    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
   }
+    __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
 
           
 /*

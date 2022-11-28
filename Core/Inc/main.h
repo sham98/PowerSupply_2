@@ -155,6 +155,21 @@ void Error_Handler(void);
 #define VolLoc            32
 #define CurLoc            0
 #define VoltMAX         51200
+
+//#define PID_KP  2.0f
+//#define PID_KI  0.5f
+//#define PID_KD  0.25f
+
+//#define PID_TAU 0.02f
+
+#define PID_LIM_MIN  0
+#define PID_LIM_MAX  51200
+
+#define PID_LIM_MIN_INT  -500000f
+#define PID_LIM_MAX_INT  500000f
+
+#define SAMPLE_TIME_S 0.000225f
+
 //#define VOLT2ENC        16
 typedef struct
 {
@@ -179,6 +194,17 @@ typedef struct
         int32_t OldErr;
         int32_t SumErr;
 }Monitor;
+
+
+typedef struct
+{
+	uint16_t Volt;
+        uint16_t DispEnc;
+        uint16_t CountDisp;
+        float DispFactor1;
+        float DispFactor0;
+        uint16_t DispVolt;
+}MonitorUSB;
 
 /* USER CODE END Private defines */
 
