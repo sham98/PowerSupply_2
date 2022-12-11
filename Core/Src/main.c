@@ -105,16 +105,13 @@ uint8_t VOLT2ENC = 12;
 //int16_t MaxEncSpeed = 15;
 //int16_t MinEncSpeed = 4;
 
-//uint32_t ArrNumFIFO = 0;
-//uint32_t MaxArrNumFIFO = 300;
+uint32_t ArrNumFIFO = 0;
+uint32_t MaxArrNumFIFO = 300;
 
-//uint16_t AFIFO [3][300] = {0};
-////uint16_t ArrNumMeanFIFO = 1000;
-////uint16_t MeanFIFO [3][100] = {0};
-//uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
-uint16_t ArrNumFIFO = 1000;
-uint16_t AFIFO [1000] = {0};
-uint32_t SumFIFO = 0;
+uint16_t AFIFO [3][300] = {0};
+//uint16_t ArrNumMeanFIFO = 1000;
+//uint16_t MeanFIFO [3][100] = {0};
+uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
 uint32_t iFilADC = 0;
   
 #if IF_Test
@@ -203,10 +200,10 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  pid.Kp = 6;
-  pid.Ki = 3;
-  pid.Kd = 0.5;
-  pid.tau = 0.0002;
+  pid.Kp = 0.1;
+  pid.Ki = 0.2;
+  pid.Kd = 0.2;
+  pid.tau = 0.01;
   pid.limMax = 12800;
   pid.limMin = 0;
   pid.limMaxInt = 50000;
@@ -1477,33 +1474,24 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-//  uint32_t SumFIFO [3] = {0,0,0};
-//  ArrNumFIFO = MaxArrNumFIFO;
-SumFIFO = 0;
+  uint32_t SumFIFO [3] = {0,0,0};
+  ArrNumFIFO = MaxArrNumFIFO;
 
-//  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)
-//  {
-//    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
-//    {
-//      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];
-//      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];
-//    }
-//    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];
-//    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
-//  }
-  SumFIFO = 0;
-  for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+
+  for (uint8_t iFilADC = 0; iFilADC < 3; iFilADC ++)
   {
-    AFIFO [iFIFO] = AFIFO [iFIFO + 1];
-    SumFIFO += AFIFO [iFIFO];
+    for (uint16_t iFIFO = 0; iFIFO < ArrNumFIFO - 1; iFIFO ++)
+    {
+      AFIFO [iFilADC] [iFIFO] = AFIFO [iFilADC] [iFIFO + 1];
+      SumFIFO [iFilADC] += AFIFO [iFilADC] [iFIFO];
+    }
+    AFIFO [iFilADC][ArrNumFIFO - 1] = AData [iFilADC];
+    SumFIFO [iFilADC] += AFIFO [iFilADC][ArrNumFIFO - 1];
   }
-  AFIFO [ArrNumFIFO - 1] = AData [0];
-  SumFIFO += AFIFO [ArrNumFIFO - 1];
   
-   Volt.Volt = SumFIFO / ArrNumFIFO;
-//  Volt.Volt = (100 * (SumFIFO [0] / ArrNumFIFO) + 0 * Volt.Volt) / 100;
-//  Curr.Volt = (100 * (SumFIFO [1]/ ArrNumFIFO) + 0 * Curr.Volt) / 100;
-//  USBCurr.Volt = (100 * (SumFIFO [2]/ ArrNumFIFO) + 0 * USBCurr.Volt) / 100;
+  Volt.Volt = (100 * (SumFIFO [0] / ArrNumFIFO) + 0 * Volt.Volt) / 100;
+  Curr.Volt = (100 * (SumFIFO [1]/ ArrNumFIFO) + 0 * Curr.Volt) / 100;
+  USBCurr.Volt = (100 * (SumFIFO [2]/ ArrNumFIFO) + 0 * USBCurr.Volt) / 100;
 
   
   
