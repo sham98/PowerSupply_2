@@ -998,19 +998,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-            if (Volt.CountPID > MaxCountPID)
-            {
-              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-            }
-            else if (Volt.CountPID == MaxCountPID)
-            {
-              Volt.CountPID ++;
-              Volt.SP = Volt.Volt;
-            }
-            else
-            {
-              Volt.CountPID ++;
-            }
+//            if (Volt.CountPID > MaxCountPID)
+//            {
+//              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+//            }
+//            else if (Volt.CountPID == MaxCountPID)
+//            {
+//              Volt.CountPID ++;
+//              Volt.SP = Volt.Volt;
+//            }
+//            else
+//            {
+//              Volt.CountPID ++;
+//            }
+//              Volt.PWM = PIDController_Update(&pid, Volt.SP, AData[0]);
+              Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
             __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
           }
           
