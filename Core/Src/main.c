@@ -102,7 +102,7 @@ float Ki1 = 0.8;
 float Kd1 = 0.8;
 float Tau1 = 0.01;
 
-float Kp2 = 10;
+float Kp2 = 2;
 float Ki2 = 4;
 float Kd2 = 4;
 float Tau2 = 0.01;
@@ -1006,8 +1006,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-            if (Volt.CountPID > MaxCountPID)
-            {
+//            if (Volt.CountPID > MaxCountPID)
+//            {
               if ((error < ErrStp1) & (error > -ErrStp1))
               {
                 pid.Kp = Kp1;
@@ -1022,21 +1022,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 pid.Kd = Kd2;
                 pid.tau = Tau2;                
               }
-              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+              Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
               __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
             }
-            else if (Volt.CountPID == MaxCountPID)
-            {
-              Volt.CountPID ++;
-              Volt.SP = Volt.Volt;
-              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-            }
-            else
-            {
-              Volt.CountPID ++;
-              Volt.SP = Volt.Volt;
-              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-            }
+//            else if (Volt.CountPID == MaxCountPID)
+//            {
+//              Volt.CountPID ++;
+//              Volt.SP = Volt.Volt;
+//              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+//            }
+//            else
+//            {
+//              Volt.CountPID ++;
+//              Volt.SP = Volt.Volt;
+//              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+//            }
 //            if (Volt.CountPID > MaxCountPID)
 //            {
 //              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
@@ -1053,7 +1053,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //              Volt.PWM = PIDController_Update(&pid, Volt.SP, AData[0]);
 //              Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
 //            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
-          }
+//          }
           
 /*
  *
@@ -1472,8 +1472,8 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     if (Volt.Status == Nor)                       // if in normal mode set PWM directly
     {
       Volt.SP = Volt.Volt;
-      Volt.PWM = Volt.Enc / Volt.EncFactor;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+//      Volt.PWM = Volt.Enc / Volt.EncFactor;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
       Volt.CountPID = 0;
     }
   }
