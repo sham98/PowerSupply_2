@@ -96,10 +96,16 @@ uint16_t InitCount = 0;
 uint16_t MaxInitCount = 3000;
 uint16_t TempVolt = 0;
 //int32_t MAXSumError = 50000000;
-//float Kp = 0;
-//float Ki = 0;
-//float Kd = 0;
-//float Tau = 0.02;
+
+float Kp1 = 0.1;
+float Ki1 = 0.2;
+float Kd1 = 0.2;
+float Tau1 = 0.01;
+
+float Kp2 = 1;
+float Ki2 = 2;
+float Kd2 = 2;
+float Tau2 = 0.01;
 
 uint8_t VOLT2ENC = 12;
 
@@ -205,7 +211,7 @@ int main(void)
   pid.Ki = 0.2;
   pid.Kd = 0.2;
   pid.tau = 0.01;
-  pid.limMax = 12800;
+  pid.limMax = HTIM_PWM_VOL.Init.Period;
   pid.limMin = 0;
   pid.limMaxInt = 50000;
   pid.limMinInt = -50000;
@@ -213,8 +219,8 @@ int main(void)
 
   Volt.MaxVolt = VoltMAX;
   Curr.MaxVolt = VoltMAX;
-  Volt.EncFactor = 4;
-  Curr.EncFactor = 4;
+  Volt.EncFactor = HTIM_ENC_VOL.Init.Period / HTIM_PWM_VOL.Init.Period;
+  Curr.EncFactor = HTIM_ENC_CURR.Init.Period / HTIM_PWM_CURR.Init.Period;
   Volt.DispFactor0 = - 15.69;
   Volt.DispFactor1 = 0.8464;
   Curr.DispFactor1 = 1;
@@ -436,7 +442,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 51210;
+  htim1.Init.Period = 51200;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -487,7 +493,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 51210;
+  htim3.Init.Period = 51200;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -580,7 +586,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 0;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 12800;
+  htim16.Init.Period = 3200;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -642,7 +648,7 @@ static void MX_TIM17_Init(void)
   htim17.Instance = TIM17;
   htim17.Init.Prescaler = 0;
   htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 12800;
+  htim17.Init.Period = 3200;
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -1002,19 +1008,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           {
             if (Volt.CountPID > MaxCountPID)
             {
-              if (error < ErrStp1)
+              if ((error < ErrStp1) & (error > -ErrStp1))
               {
-                pid.Kp = 0.1;
-                pid.Ki = 0.2;
-                pid.Kd = 0.2;
-                pid.tau = 0.01;                
+                pid.Kp = Kp1;
+                pid.Ki = Ki1;
+                pid.Kd = Kd1;
+                pid.tau = Tau1;                
               }
               else
               {
-                pid.Kp = 1;
-                pid.Ki = 2;
-                pid.Kd = 2;
-                pid.tau = 0.01;                
+                pid.Kp = Kp2;
+                pid.Ki = Ki2;
+                pid.Kd = Kd2;
+                pid.tau = Tau2;                
               }
               Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
               __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
