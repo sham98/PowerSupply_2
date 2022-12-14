@@ -85,7 +85,7 @@ uint8_t cH = 0;
 //uint8_t Knew = 100;
 //uint8_t Kold = 0;
 
-uint16_t ErrStp1 = 100;
+uint16_t ErrStp1 = 5;
 uint8_t PIDEn = 0;
 float error = 0;
 uint16_t MaxCountPID = 5000;
@@ -97,14 +97,14 @@ uint16_t MaxInitCount = 3000;
 uint16_t TempVolt = 0;
 //int32_t MAXSumError = 50000000;
 
-float Kp1 = 0.1;
-float Ki1 = 0.2;
-float Kd1 = 0.2;
+float Kp1 = 0.4;
+float Ki1 = 0.8;
+float Kd1 = 0.8;
 float Tau1 = 0.01;
 
-float Kp2 = 1;
-float Ki2 = 2;
-float Kd2 = 2;
+float Kp2 = 10;
+float Ki2 = 4;
+float Kd2 = 4;
 float Tau2 = 0.01;
 
 uint8_t VOLT2ENC = 12;
@@ -586,7 +586,7 @@ static void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 0;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 3200;
+  htim16.Init.Period = 6400;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -1029,12 +1029,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               Volt.CountPID ++;
               Volt.SP = Volt.Volt;
-              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
+              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
             }
             else
             {
-              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
               Volt.CountPID ++;
+              Volt.SP = Volt.Volt;
+              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
             }
 //            if (Volt.CountPID > MaxCountPID)
 //            {
