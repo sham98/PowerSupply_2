@@ -212,14 +212,17 @@ void SysTick_Handler(void)
       PIDSwitch = 1;
 //      Volt.PWM = 20000 / Volt.EncFactor;
 //      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
-      Volt.ENC = 2000;
+      Volt.Enc = ENCSTP1;
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
       Volt.CountPID = 0;
     }
     else
     {
       PIDSwitch = 0;      
-      Volt.PWM = 25000 / Volt.EncFactor;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+//      Volt.PWM = 25000 / Volt.EncFactor;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+      Volt.Enc = ENCSTP2;
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
       Volt.CountPID = 0;
     }
   }

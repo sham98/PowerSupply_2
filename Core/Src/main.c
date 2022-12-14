@@ -82,14 +82,12 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-//uint8_t Knew = 100;
-//uint8_t Kold = 0;
+uint16_t Knew = 100;
+uint16_t Kold = 0;
 
-uint16_t ErrStp1 = 5;
 uint8_t PIDEn = 0;
 float error = 0;
 uint16_t MaxCountPID = 5000;
-uint16_t MaxiPIDSwitch = 100;
 uint8_t InitFlag = 0;
 uint8_t FirsRead = 0;
 uint16_t InitCount = 0;
@@ -97,15 +95,16 @@ uint16_t MaxInitCount = 3000;
 uint16_t TempVolt = 0;
 //int32_t MAXSumError = 50000000;
 
-float Kp1 = 0.2;
+uint16_t ErrStp1 = 5000;
+float Kp1 = 0.1;
 float Ki1 = 0.4;
-float Kd1 = 0.4;
+float Kd1 = 0.01;
 float Tau1 = 0.01;
 
-float Kp2 = 2;
-float Ki2 = 4;
-float Kd2 = 4;
-float Tau2 = 0.01;
+float Kp2 = .1;
+float Ki2 = .4;
+float Kd2 = 6;
+float Tau2 = 6;
 
 uint8_t VOLT2ENC = 12;
 
@@ -131,8 +130,8 @@ uint16_t TriVolStep = 4;
 #endif
 
 #if PIDTunning
-uint16_t ENCSTP1 = 2000;
-uint16_t ENCSTP2 = 4000;
+uint16_t ENCSTP1 = 8000;
+uint16_t ENCSTP2 = 40000;
 uint16_t MaxiPIDSwitch = 2000;
 #endif
 
@@ -1385,7 +1384,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               int32_t TempDisp = (Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0);
               if (TempDisp > 0)
-                Volt.DispVolt = TempDisp;
+                Volt.DispVolt = (Knew * TempDisp + Kold * Volt.DispVolt) / 100;
               else
                 Volt.DispVolt = 0;
               Mon4Seg(Volt.DispVolt, VolLoc);
