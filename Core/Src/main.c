@@ -97,9 +97,9 @@ uint16_t MaxInitCount = 3000;
 uint16_t TempVolt = 0;
 //int32_t MAXSumError = 50000000;
 
-float Kp1 = 0.4;
-float Ki1 = 0.8;
-float Kd1 = 0.8;
+float Kp1 = 0.2;
+float Ki1 = 0.4;
+float Kd1 = 0.4;
 float Tau1 = 0.01;
 
 float Kp2 = 2;
@@ -129,6 +129,13 @@ uint16_t iTriMax = 12800;
 uint16_t Ramp = 1;
 uint16_t TriVolStep = 4;
 #endif
+
+#if PIDTunning
+uint16_t ENCSTP1 = 2000;
+uint16_t ENCSTP2 = 4000;
+uint16_t MaxiPIDSwitch = 2000;
+#endif
+
 
 enum
 {

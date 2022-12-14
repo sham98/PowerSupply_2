@@ -54,7 +54,6 @@ extern uint16_t MinSamEncTime;
 
 extern Monitor Volt, Curr, USBCurr;
 extern uint16_t Disp3s;
-extern uint16_t MaxiPIDSwitch;
 
 //extern int16_t MaxEncSpeed;
 //extern int16_t MinEncSpeed;
@@ -77,6 +76,12 @@ extern uint16_t Ramp;
 extern uint16_t TriVolStep;
 #endif
 
+
+#if PIDTunning
+extern uint16_t ENCSTP1;
+extern uint16_t ENCSTP2;
+extern uint16_t MaxiPIDSwitch;
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -205,8 +210,9 @@ void SysTick_Handler(void)
     if (PIDSwitch == 0)
     {
       PIDSwitch = 1;
-      Volt.PWM = 20000 / Volt.EncFactor;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+//      Volt.PWM = 20000 / Volt.EncFactor;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
+      Volt.ENC = 2000;
       Volt.CountPID = 0;
     }
     else
