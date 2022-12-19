@@ -918,7 +918,7 @@ uint16_t* SevSegm (uint8_t Num)
 void Mon4Seg (uint16_t volt, uint8_t Loc)
 {
   uint8_t Integer = volt / 100;         // Quotient of divide in 100 
-  if (Integer <= 9)                     // Locate Quotient in LED_Data and remove zero before one digit numbers
+  if ((Integer <= 9) & (Loc == VolLoc))                     // Locate Quotient in LED_Data and remove zero before one digit numbers
   {
     uint16_t *pBuf = SevSegm (Integer);
     for (uint8_t iInteger = 0; iInteger < 8; iInteger ++)
@@ -941,7 +941,7 @@ void Mon4Seg (uint16_t volt, uint8_t Loc)
     }
   }
 
-  LED_Data [Loc + 15] = 1;              // Point
+//  LED_Data [Loc + 15] = 1;              // Point
   uint8_t Frac = volt % 100;            // Remainder of divide in 100
 
   uint16_t * pBuf1 = SevSegm(Frac / 10);
@@ -1413,11 +1413,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               else
                 Volt.DispVolt = 0;
               Mon4Seg(Volt.DispVolt, VolLoc);
+              LED_Data [VolLoc + 15] = 1;              // Point
             }
             else if (Volt.CountDisp >= Disp3s)
             {
               Volt.DispEnc = Volt.Enc / 4;
               Mon4Seg(Volt.DispEnc, VolLoc);
+              LED_Data [VolLoc + 15] = 1;              // Point
               Volt.CountDisp --;
             }
             else if (Volt.CountDisp > 0)
@@ -1430,11 +1432,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               Curr.DispVolt = Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0;
               Mon4Seg(Curr.DispVolt, CurLoc);
+              LED_Data [CurLoc + 7] = 1;              // Point
             }
             else if (Curr.CountDisp >= Disp3s)
             {
               Curr.DispEnc = Curr.Enc / 4;
               Mon4Seg (Curr.DispEnc, CurLoc);
+              LED_Data [CurLoc + 7] = 1;              // Point
               Curr.CountDisp --;
             }
             else if (Curr.CountDisp > 0)
