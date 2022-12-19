@@ -82,8 +82,8 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint16_t Knew = 100;
-uint16_t Kold = 0;
+uint16_t Knew = 50;
+uint16_t Kold = 50;
 
 uint8_t PIDEn = 0;
 float error = 0;
@@ -108,7 +108,8 @@ float Tau2 = 6;
 
 uint8_t VOLT2ENC = 12;
 
-//int16_t MaxEncSpeed = 15;
+int16_t MaxEncSpeed = 20;
+int16_t MaxEncInc = 1200;
 //int16_t MinEncSpeed = 4;
 
 uint32_t ArrNumFIFO = 0;

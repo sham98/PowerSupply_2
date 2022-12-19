@@ -55,7 +55,8 @@ extern uint16_t MinSamEncTime;
 extern Monitor Volt, Curr, USBCurr;
 extern uint16_t Disp3s;
 
-//extern int16_t MaxEncSpeed;
+extern int16_t MaxEncSpeed;
+extern int16_t MaxEncInc;
 //extern int16_t MinEncSpeed;
 
 //extern float Kp;
@@ -230,6 +231,8 @@ void SysTick_Handler(void)
     iPIDSwitch ++;
 #endif  
   
+
+
   int8_t Kmin = 1;
   indx ++;
   if (indx >= MaxSamEncTime)
@@ -251,7 +254,7 @@ void SysTick_Handler(void)
 
       if (Volt.SpdEnc >= MaxEncSpeed)
       {
-        int32_t TempVolt = Kmin * 400 + Volt.Enc;
+        int32_t TempVolt = Kmin * MaxEncInc + Volt.Enc;
         if (TempVolt > HTIM_ENC_VOL.Init.Period)
         {
           Volt.Enc = HTIM_ENC_VOL.Init.Period;
@@ -270,7 +273,7 @@ void SysTick_Handler(void)
       }
       else 
       {
-        int32_t TempVolt = Volt.Enc + Kmin * (- 140 + 36 * Volt.SpdEnc) ;
+        int32_t TempVolt = Volt.Enc + Kmin * ((MaxEncInc - 4)/(MaxEncSpeed - 4) * Volt.SpdEnc - (4 * MaxEncInc - 4 * MaxEncSpeed)/(MaxEncSpeed - 4));
         if (TempVolt > HTIM_ENC_VOL.Init.Period)
         {
           Volt.Enc = HTIM_ENC_VOL.Init.Period;
@@ -316,7 +319,7 @@ void SysTick_Handler(void)
 
       if (Curr.SpdEnc >= MaxEncSpeed)
       {
-        int32_t TempCurr = Kmin * 400 + Curr.Enc;
+        int32_t TempCurr = Kmin * MaxEncInc + Curr.Enc;
         if (TempCurr < 0)
         {
           Curr.Enc = 0;
@@ -335,7 +338,7 @@ void SysTick_Handler(void)
       }
       else 
       {
-        int32_t TempCurr = Curr.Enc + Kmin * (- 140 + 36 * Curr.SpdEnc) ;
+        int32_t TempCurr = Curr.Enc + Kmin * ((MaxEncInc - 4)/(MaxEncSpeed - 4) * Curr.SpdEnc - (4 * MaxEncInc - 4 * MaxEncSpeed)/(MaxEncSpeed - 4));
         if (TempCurr < 0)
         {
           Curr.Enc = 0;

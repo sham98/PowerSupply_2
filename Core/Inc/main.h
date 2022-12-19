@@ -109,7 +109,7 @@ void Error_Handler(void);
 #define HTIM_PWM_VOL        htim17
 #define MAXSumError         50000
 
-#define MaxEncSpeed             15
+//#define MaxEncSpeed             15
 #define MinEncSpeed             4
 #define MaxSamEncTime    30
 #define iKepEXI         1000

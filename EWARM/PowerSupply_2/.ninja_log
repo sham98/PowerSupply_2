@@ -69,3 +69,11 @@
 2	781	6927334062701550	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Obj/Application/User/Core/main.o	179397bc215e046d
 793	934	6927334064230688	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.out	802088713066bd53
 970	1002	6927334065050577	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.hex	1e2d1b5d95b20937
+13	1064	6931325300719022	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Obj/Application/User/Core/main.o	179397bc215e046d
+1076	2213	6931325312192463	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.out	802088713066bd53
+2250	2290	6931325313171912	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.hex	1e2d1b5d95b20937
+31	660	6931353553697906	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Obj/Application/User/Core/stm32f0xx_hal_msp.o	a56041d29d99dee3
+15	1014	6931353557205934	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Obj/Application/User/Core/main.o	179397bc215e046d
+2	246	6931353981342957	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Obj/Application/User/Core/stm32f0xx_it.o	53a654b339f83b5f
+257	1244	6931353991217256	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.out	802088713066bd53
+1279	1314	6931353992156726	E:/Storage_W/MEGA/Other/Amin/STM/PowerSupply_2/EWARM/PowerSupply_2/Exe/PowerSupply_2.hex	1e2d1b5d95b20937
