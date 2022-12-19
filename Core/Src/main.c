@@ -238,7 +238,8 @@ int main(void)
   Curr.EncFactor = HTIM_ENC_CURR.Init.Period / HTIM_PWM_CURR.Init.Period;
   Volt.DispFactor0 = - 15.69;
   Volt.DispFactor1 = 0.8464;
-  Curr.DispFactor1 = 1;
+  Curr.DispFactor0 = -331.9;
+  Curr.DispFactor1 = 1.38;
   USBCurr.DispFactor1 = 1;
   Curr.Enc = 4000;
   __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
@@ -1430,7 +1431,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             
             if ((Curr.Status == Nor) | (Curr.CountDisp == 0))
             {
-              Curr.DispVolt = Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0;
+              int32_t TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
+              if (TempDisp > 0)
+                Curr.DispVolt = (Knew * TempDisp + Kold * Curr.DispVolt) / 100;
+              else
+                Curr.DispVolt = 0;
               Mon4Seg(Curr.DispVolt, CurLoc);
               LED_Data [CurLoc + 7] = 1;              // Point
             }
@@ -1537,7 +1542,6 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
     }
   }
-  
 }
 
 
