@@ -172,6 +172,12 @@ void Error_Handler(void);
 #define SAMPLE_TIME_S 0.000225f
 
 //#define VOLT2ENC        16
+
+//#define BstKnew 50
+//#define BstKold 50
+#define MaxKnew 100
+#define MaxKold 0
+
 typedef struct
 {
 	uint16_t Volt;

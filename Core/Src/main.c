@@ -82,8 +82,14 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint16_t Knew = 50;
-uint16_t Kold = 50;
+uint16_t Knew = 0;
+uint16_t Kold = 0;
+uint16_t BstKnew = 30;
+uint16_t BstKold = 70;
+
+
+uint16_t MaxFIR = 200;
+uint16_t iMaxFIR = 0;
 
 uint8_t PIDEn = 0;
 float error = 0;
@@ -214,6 +220,8 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
+  Knew = BstKnew;
+  Kold = BstKnew;
   pid.Kp = 0.1;
   pid.Ki = 0.2;
   pid.Kd = 0.2;
@@ -1365,7 +1373,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *
  */
           
+          if (Knew != BstKnew)
+          {
+            if (iMaxFIR > MaxFIR)
+            {
+              iMaxFIR = 0;
+              Knew --;
+              Kold ++;
+            }
+            else
+            {
+              iMaxFIR ++;
+            }
+          }            
 
+          
           iLED ++;
           if (iLED >= 2 * LED_Num)
           {
@@ -1381,6 +1403,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
            *      LED_Data buffer filling
            *
            *******************************************************************/
+            
+            
             if ((Volt.Status == Nor) | (Volt.CountDisp == 0))
             {
               int32_t TempDisp = (Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0);
@@ -1453,6 +1477,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
 //  ArrNumFIFO = 10;
+  Knew = MaxKnew;
+  Kold = MaxKold;
+
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
   LED_Data [LEDM2Num] = 0;
