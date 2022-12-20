@@ -31,6 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "PID.h"
 
 /* USER CODE END Includes */
 
@@ -156,6 +157,7 @@ void Error_Handler(void);
 #define VolLoc            32
 #define CurLoc            0
 #define VoltMAX         51200
+#define CurrMAX         20000
 
 //#define PID_KP  2.0f
 //#define PID_KI  0.5f
@@ -202,6 +204,9 @@ typedef struct
         int32_t DErr;
         int32_t OldErr;
         int32_t SumErr;
+        uint8_t KDspnew;
+        uint8_t KDspold;
+        PIDController pid;
 }Monitor;
 
 

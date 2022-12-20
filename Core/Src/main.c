@@ -82,10 +82,12 @@ uint8_t cL = 0;
 uint8_t cH = 0;
 
 
-uint16_t Knew = 0;
-uint16_t Kold = 0;
-uint16_t BstKnew = 30;
-uint16_t BstKold = 70;
+//uint16_t Knew = 0;
+//uint16_t Kold = 0;
+uint16_t VoltBstKnew = 30;
+uint16_t VoltBstKold = 70;
+uint16_t CurrBstKnew = 30;
+uint16_t CurrBstKold = 70;
 
 
 uint16_t MaxFIR = 200;
@@ -155,7 +157,7 @@ enum
 };
 
 
-PIDController pid;
+//PIDController pid;
 
 Monitor Volt, Curr;
 MonitorUSB USBCurr;
@@ -220,22 +222,36 @@ int main(void)
   MX_TIM14_Init();
   MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
-  Knew = BstKnew;
-  Kold = BstKnew;
-  pid.Kp = 0.1;
-  pid.Ki = 0.2;
-  pid.Kd = 0.2;
-  pid.tau = 0.01;
-  pid.limMax = HTIM_PWM_VOL.Init.Period;
-  pid.limMin = 0;
-  pid.limMaxInt = 50000;
-  pid.limMinInt = -50000;
-  pid.T = 0.000225;
+//  Knew = BstKnew;
+//  Kold = BstKnew;
+  Volt.pid.Kp = 0.1;
+  Volt.pid.Ki = 0.2;
+  Volt.pid.Kd = 0.2;
+  Volt.pid.tau = 0.01;
+  Volt.pid.limMax = HTIM_PWM_VOL.Init.Period;
+  Volt.pid.limMin = 0;
+  Volt.pid.limMaxInt = 50000;
+  Volt.pid.limMinInt = -50000;
+  Volt.pid.T = 0.000225;
 
+  Curr.pid.Kp = 0.1;
+  Curr.pid.Ki = 0.2;
+  Curr.pid.Kd = 0.2;
+  Curr.pid.tau = 0.01;
+  Curr.pid.limMax = VoltMAX;
+  Curr.pid.limMin = 0;
+  Curr.pid.limMaxInt = 50000;
+  Curr.pid.limMinInt = -50000;
+  Curr.pid.T = 0.000225;
+  
   Volt.MaxVolt = VoltMAX;
-  Curr.MaxVolt = VoltMAX;
+  Curr.MaxVolt = CurrMAX;
   Volt.EncFactor = HTIM_ENC_VOL.Init.Period / HTIM_PWM_VOL.Init.Period;
   Curr.EncFactor = HTIM_ENC_CURR.Init.Period / HTIM_PWM_CURR.Init.Period;
+  Volt.KDspnew = 30;
+  Volt.KDspold = 70;
+  Curr.KDspnew = 30;
+  Curr.KDspold = 70;
   Volt.DispFactor0 = - 15.69;
   Volt.DispFactor1 = 0.8464;
   Curr.DispFactor0 = -331.9;
@@ -256,7 +272,7 @@ int main(void)
   HAL_ADCEx_Calibration_Start(&hadc);
   HAL_ADC_Start_DMA(&hadc, (uint32_t*)AData, 3);
 
-    PIDController_Init(&pid);
+  PIDController_Init(&Volt.pid);
 
   /* USER CODE END 2 */
 
@@ -1022,54 +1038,34 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-//            if (Volt.CountPID > MaxCountPID)
-//            {
-              if ((error < ErrStp1) & (error > -ErrStp1))
-              {
-                pid.Kp = Kp1;
-                pid.Ki = Ki1;
-                pid.Kd = Kd1;
-                pid.tau = Tau1;                
-              }
-              else
-              {
-                pid.Kp = Kp2;
-                pid.Ki = Ki2;
-                pid.Kd = Kd2;
-                pid.tau = Tau2;                
-              }
-              Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
-              __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+            if (Curr.Volt > Curr.MaxVolt)
+            {
+              Curr.pid.limMax = Volt.Enc;
+//              Volt.SP = PIDController_Update(&Curr.pid, Curr.MaxVolt, Curr.Volt);
             }
-//            else if (Volt.CountPID == MaxCountPID)
-//            {
-//              Volt.CountPID ++;
-//              Volt.SP = Volt.Volt;
-//              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-//            }
-//            else
-//            {
-//              Volt.CountPID ++;
-//              Volt.SP = Volt.Volt;
-//              uint16_t TempPWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-//            }
-//            if (Volt.CountPID > MaxCountPID)
-//            {
-//              Volt.PWM = PIDController_Update(&pid, Volt.SP, Volt.Volt);
-//            }
-//            else if (Volt.CountPID == MaxCountPID)
-//            {
-//              Volt.CountPID ++;
-//              Volt.SP = Volt.Volt;
-//            }
-//            else
-//            {
-//              Volt.CountPID ++;
-//            }
-//              Volt.PWM = PIDController_Update(&pid, Volt.SP, AData[0]);
-//              Volt.PWM = PIDController_Update(&pid, Volt.Enc, VOLT2ENC * Volt.Volt);
-//            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
-//          }
+            else
+            {
+              Volt.SP = Volt.Enc;
+            }
+            
+            
+            if ((error < ErrStp1) & (error > -ErrStp1))
+            {
+              Volt.pid.Kp = Kp1;
+              Volt.pid.Ki = Ki1;
+              Volt.pid.Kd = Kd1;
+              Volt.pid.tau = Tau1;                
+            }
+            else
+            {
+              Volt.pid.Kp = Kp2;
+              Volt.pid.Ki = Ki2;
+              Volt.pid.Kd = Kd2;
+              Volt.pid.tau = Tau2;                
+            }
+            Volt.PWM = PIDController_Update(&Volt.pid, Volt.SP, VOLT2ENC * Volt.Volt);
+            __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
+          }
           
 /*
  *
@@ -1374,13 +1370,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
  *
  */
           
-          if (Knew != BstKnew)
+          if (Volt.KDspnew != VoltBstKnew)
           {
             if (iMaxFIR > MaxFIR)
             {
               iMaxFIR = 0;
-              Knew --;
-              Kold ++;
+              Volt.KDspnew --;
+              Volt.KDspold ++;
             }
             else
             {
@@ -1410,7 +1406,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             {
               int32_t TempDisp = (Volt.DispFactor1 * Volt.Volt + Volt.DispFactor0);
               if (TempDisp > 0)
-                Volt.DispVolt = (Knew * TempDisp + Kold * Volt.DispVolt) / 100;
+                Volt.DispVolt = (Volt.KDspnew * TempDisp + Volt.KDspold * Volt.DispVolt) / 100;
               else
                 Volt.DispVolt = 0;
               Mon4Seg(Volt.DispVolt, VolLoc);
@@ -1425,15 +1421,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else if (Volt.CountDisp > 0)
             {
+              Volt.DispEnc = Volt.Enc / 4;
+              Mon4Seg(Volt.DispEnc, VolLoc);
+              LED_Data [VolLoc + 15] = 1;              // Point
               Volt.CountDisp --;
             }
             
             
-            if ((Curr.Status == Nor) | (Curr.CountDisp == 0))
+//            if ((Curr.Status == Nor) | (Curr.CountDisp == 0))
+            if (Curr.CountDisp == 0)
             {
               int32_t TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
               if (TempDisp > 0)
-                Curr.DispVolt = (Knew * TempDisp + Kold * Curr.DispVolt) / 100;
+                Curr.DispVolt = (Curr.KDspnew * TempDisp + Curr.KDspold * Curr.DispVolt) / 100;
               else
                 Curr.DispVolt = 0;
               Mon4Seg(Curr.DispVolt, CurLoc);
@@ -1442,12 +1442,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             else if (Curr.CountDisp >= Disp3s)
             {
               Curr.DispEnc = Curr.Enc / 4;
+//              Curr.MaxVolt = Curr.DispEnc;
               Mon4Seg (Curr.DispEnc, CurLoc);
               LED_Data [CurLoc + 7] = 1;              // Point
               Curr.CountDisp --;
             }
             else if (Curr.CountDisp > 0)
             {
+              Curr.DispEnc = Curr.Enc / 4;
+              Mon4Seg (Curr.DispEnc, CurLoc);
+              LED_Data [CurLoc + 7] = 1;              // Point
               Curr.CountDisp --;
             }
             
@@ -1486,8 +1490,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
 //  ArrNumFIFO = 10;
-  Knew = MaxKnew;
-  Kold = MaxKold;
+  Volt.KDspnew = MaxKnew;
+  Volt.KDspold = MaxKold;
 
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
