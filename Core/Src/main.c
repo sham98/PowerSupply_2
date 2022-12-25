@@ -238,7 +238,7 @@ int main(void)
   Curr.pid.Ki = 0.2;
   Curr.pid.Kd = 0.2;
   Curr.pid.tau = 0.01;
-  Curr.pid.limMax = VoltMAX;
+  Curr.pid.limMax = HTIM_PWM_VOL.Init.Period;
   Curr.pid.limMin = 0;
   Curr.pid.limMaxInt = 50000;
   Curr.pid.limMinInt = -50000;
@@ -264,7 +264,7 @@ int main(void)
   HAL_TIM_Encoder_Start_IT(&HTIM_ENC_VOL, TIM_CHANNEL_ALL);    // Encoder Voltage PWM
 
 //  HAL_TIM_PWM_Start(&HTIM_ENC_VOL, TIM_CHANNEL_3);     // Fan PWM
-  HAL_TIM_PWM_Start(&HTIM_PWM_CURR, TIM_CHANNEL_1);    // Current PWM
+//  HAL_TIM_PWM_Start(&HTIM_PWM_CURR, TIM_CHANNEL_1);    // Current PWM
   HAL_TIM_PWM_Start(&HTIM_PWM_VOL, TIM_CHANNEL_1);    // Voltage PWM
 
   HAL_TIM_Base_Start_IT(&htim14);
@@ -1038,10 +1038,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-            if (Curr.Volt > Curr.MaxVolt)
+            if (Curr.Volt > Curr.Enc)
             {
               Curr.pid.limMax = Volt.Enc;
-//              Volt.SP = PIDController_Update(&Curr.pid, Curr.MaxVolt, Curr.Volt);
+              Volt.SP = PIDController_Update(&Curr.pid, Curr.Enc, Curr.Volt);
             }
             else
             {
@@ -1540,11 +1540,11 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
     }
 
-    if (Curr.Status == Nor)                       // if it's still in display encoder
-    {
-      Curr.PWM = Curr.Enc / Curr.EncFactor;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
-    }
+//    if (Curr.Status == Nor)                       // if it's still in display encoder
+//    {
+//      Curr.PWM = Curr.Enc / Curr.EncFactor;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
+//    }
   }
 }
 
