@@ -94,7 +94,7 @@ uint16_t MaxFIR = 200;
 uint16_t iMaxFIR = 0;
 
 uint8_t PIDEn = 0;
-float error = 0;
+//float error = 0;
 uint16_t MaxCountPID = 5000;
 uint8_t InitFlag = 0;
 uint8_t FirsRead = 0;
@@ -113,6 +113,19 @@ float Kp2 = .1;
 float Ki2 = .4;
 float Kd2 = 6;
 float Tau2 = 6;
+
+
+uint16_t CurrErrStp1 = 5000;
+float CurrKp1 = 0.1;
+float CurrKi1 = 0.4;
+float CurrKd1 = 0.01;
+float CurrTau1 = 0.01;
+
+float CurrKp2 = .1;
+float CurrKi2 = .4;
+float CurrKd2 = 6;
+float CurrTau2 = 6;
+
 
 uint8_t VOLT2ENC = 12;
 
@@ -1012,6 +1025,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
           HAL_TIM_Base_Stop(htim);                      // Stop timing 
           
+          Curr.TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
 
           if (InitFlag == 0)            // Zero offset
           {
@@ -1038,18 +1052,25 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-            if (Curr.Volt > Curr.Enc)
+            if ((Curr.pid.error < CurrErrStp1) & (Curr.pid.error > -CurrErrStp1))
             {
-              Curr.pid.limMax = Volt.Enc;
-              Volt.SP = PIDController_Update(&Curr.pid, Curr.Enc, Curr.Volt);
+              Curr.pid.Kp = CurrKp1;
+              Curr.pid.Ki = CurrKi1;
+              Curr.pid.Kd = CurrKd1;
+              Curr.pid.tau = CurrTau1;                
             }
             else
             {
-              Volt.SP = Volt.Enc;
+              Curr.pid.Kp = CurrKp2;
+              Curr.pid.Ki = CurrKi2;
+              Curr.pid.Kd = CurrKd2;
+              Curr.pid.tau = CurrTau2;                
             }
+            Curr.pid.limMax = Volt.Enc;
+            Volt.SP = PIDController_Update(&Curr.pid, Curr.Enc / 4, Curr.TempDisp);
             
             
-            if ((error < ErrStp1) & (error > -ErrStp1))
+            if ((Volt.pid.error < ErrStp1) & (Volt.pid.error > -ErrStp1))
             {
               Volt.pid.Kp = Kp1;
               Volt.pid.Ki = Ki1;
@@ -1431,9 +1452,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //            if ((Curr.Status == Nor) | (Curr.CountDisp == 0))
             if (Curr.CountDisp == 0)
             {
-              int32_t TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
-              if (TempDisp > 0)
-                Curr.DispVolt = (Curr.KDspnew * TempDisp + Curr.KDspold * Curr.DispVolt) / 100;
+//              Curr.TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
+              if (Curr.TempDisp > 0)
+                Curr.DispVolt = (Curr.KDspnew * Curr.TempDisp + Curr.KDspold * Curr.DispVolt) / 100;
               else
                 Curr.DispVolt = 0;
               Mon4Seg(Curr.DispVolt, CurLoc);
@@ -1461,7 +1482,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             /******************************************************************/
           }
           else
-          {
+           {
             if (iLED % 2 == 0)
             {
               HAL_GPIO_WritePin(O_CLK_GPIO_Port, O_CLK_Pin, GPIO_PIN_RESET);

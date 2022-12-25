@@ -28,7 +28,7 @@
         <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>3002209915</Checksum>
+        <Checksum>157987821</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -50,12 +50,14 @@
         <Category2>_ 2</Category2>
     </LogFile>
     <watch_formats>
-        <Fmt0>{W}42:Knew	3	0</Fmt0>
-        <Fmt1>{W}42:Kold	3	0</Fmt1>
-        <Fmt2>{W}42:LED_Data	0	4</Fmt2>
-        <Fmt3>{W}42:LowEnc	3	0</Fmt3>
-        <Fmt4>{W}42:VOLT2ENC	3	0</Fmt4>
-        <Fmt5>{W}42:Volt.DispFactor	0	9</Fmt5>
+        <Fmt0>{W}42:Curr.KDspnew	3	0</Fmt0>
+        <Fmt1>{W}42:Curr.KDspold	3	0</Fmt1>
+        <Fmt2>{W}42:Knew	3	0</Fmt2>
+        <Fmt3>{W}42:Kold	3	0</Fmt3>
+        <Fmt4>{W}42:LED_Data	0	4</Fmt4>
+        <Fmt5>{W}42:LowEnc	3	0</Fmt5>
+        <Fmt6>{W}42:VOLT2ENC	3	0</Fmt6>
+        <Fmt7>{W}42:Volt.DispFactor	0	9</Fmt7>
     </watch_formats>
     <Trace2>
         <Enabled>0</Enabled>

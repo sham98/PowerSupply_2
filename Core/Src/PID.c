@@ -1,5 +1,5 @@
 #include "PID.h"
-extern float error;
+//extern float error;
 void PIDController_Init(PIDController *pid) {
 
 	/* Clear controller variables */
@@ -18,19 +18,19 @@ float PIDController_Update(PIDController *pid, float setpoint, float measurement
 	/*
 	* Error signal
 	*/
-    error = setpoint - measurement;
+    pid->error = setpoint - measurement;
 
 
 	/*
 	* Proportional
 	*/
-    float proportional = pid->Kp * error;
+    float proportional = pid->Kp * pid->error;
 
 
 	/*
 	* Integral
 	*/
-    pid->integrator = pid->integrator + 0.5f * pid->Ki * pid->T * (error + pid->prevError);
+    pid->integrator = pid->integrator + 0.5f * pid->Ki * pid->T * (pid->error + pid->prevError);
 
 	/* Anti-wind-up via integrator clamping */
     if (pid->integrator > pid->limMaxInt) {
@@ -69,7 +69,7 @@ float PIDController_Update(PIDController *pid, float setpoint, float measurement
     }
 
 	/* Store error and measurement for later use */
-    pid->prevError       = error;
+    pid->prevError       = pid->error;
     pid->prevMeasurement = measurement;
 
 	/* Return controller output */

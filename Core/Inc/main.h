@@ -206,6 +206,7 @@ typedef struct
         int32_t SumErr;
         uint8_t KDspnew;
         uint8_t KDspold;
+        int32_t TempDisp;
         PIDController pid;
 }Monitor;
 
