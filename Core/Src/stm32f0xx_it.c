@@ -68,7 +68,7 @@ extern int16_t MaxEncInc;
 //extern int32_t MAXSumError;
 uint16_t iPIDSwitch = 0;
 uint8_t PIDSwitch = 0;
-#if IF_Test
+#if (IF_VOLTTest | IF_CURRTest)
 extern uint16_t iTriInd;
 extern uint16_t ITriIndMax;
 extern int16_t iTriangle;
@@ -170,7 +170,7 @@ void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
-#if IF_Test
+#if IF_VOLTTest
   if (iTriInd >= ITriIndMax)
   {
     iTriInd = 0;
@@ -204,6 +204,41 @@ void SysTick_Handler(void)
   }  
 #endif
 
+#if IF_CURRTest
+  if (iTriInd >= ITriIndMax)
+  {
+    iTriInd = 0;
+    
+    if (Ramp == 2)
+    {
+      iTriangle = iTriangle - TriVolStep;
+      if (iTriangle < 0)
+        iTriangle = 0;
+    }
+    else if (Ramp == 1)
+    {
+      iTriangle = iTriangle + TriVolStep;
+    }
+
+
+    if (iTriangle >= iTriMax)
+    {
+      Ramp = 2;
+    }
+    else if (iTriangle == 0)
+    {
+      Ramp = 1;
+    }
+
+    __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, iTriangle);
+  }  
+  else
+  {
+    iTriInd ++;
+  }  
+#endif
+  
+  
 #if PIDTunning
   if (iPIDSwitch > MaxiPIDSwitch)
   {

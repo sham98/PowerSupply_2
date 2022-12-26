@@ -142,11 +142,11 @@ uint16_t AFIFO [3][300] = {0};
 uint32_t SumFIFO [3] = {0,0,0};                       // Array sum of ADC values
 uint32_t iFilADC = 0;
   
-#if IF_Test
+#if (IF_VOLTTest | IF_CURRTest)
 uint16_t iTriInd = 0;
 uint16_t ITriIndMax = 1;
 int16_t iTriangle = 0;
-uint16_t iTriMax = 12800;
+uint16_t iTriMax = 6400;
 uint16_t Ramp = 1;
 uint16_t TriVolStep = 4;
 #endif
@@ -237,6 +237,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
 //  Knew = BstKnew;
 //  Kold = BstKnew;
+#if IF_CURRTest
+uint16_t iTriMax = HTIM_PWM_CURR.Init.Period;
+#endif
+
+#if IF_VOLTTest
+uint16_t iTriMax = HTIM_PWM_VOL.Init.Period;
+#endif
+
   Volt.pid.Kp = 0.1;
   Volt.pid.Ki = 0.2;
   Volt.pid.Kd = 0.2;
@@ -1027,6 +1035,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           
           Curr.TempDisp = (Curr.DispFactor1 * Curr.Volt + Curr.DispFactor0);
 
+#if (!IF_CURRTest & !IF_VOLTTest)
           if (InitFlag == 0)            // Zero offset
           {
             if (InitCount < MaxInitCount)
@@ -1087,7 +1096,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             Volt.PWM = PIDController_Update(&Volt.pid, Volt.Enc, VOLT2ENC * Volt.Volt);
             __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL,TIM_CHANNEL_1, Volt.PWM);
           }
-          
+#endif          
 /*
  *
  *      Extrnal Interrupt
