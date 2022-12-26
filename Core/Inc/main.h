@@ -101,10 +101,12 @@ void Error_Handler(void);
 #define ENC_VA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
-#define IF_Nor          0
-#define IF_VOLTTest     0
-#define IF_CURRTest     1
-#define PIDTunning      0
+#define IF_Nor                  0
+#define IF_VOLTTest             0
+#define IF_CURRTest             0
+#define IF_VOLTPIDTunning       0
+#define IF_CURRPIDTunning       1
+
 
 #define HTIM_ENC_CURR       htim1
 #define HTIM_ENC_VOL        htim3

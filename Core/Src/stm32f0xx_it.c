@@ -78,9 +78,15 @@ extern uint16_t TriVolStep;
 #endif
 
 
-#if PIDTunning
-extern uint16_t ENCSTP1;
-extern uint16_t ENCSTP2;
+#if IF_VOLTPIDTunning
+extern uint16_t VOLTENCSTP1;
+extern uint16_t VOLTENCSTP2;
+extern uint16_t MaxiPIDSwitch;
+#endif
+
+#if IF_CURRPIDTunning
+extern uint16_t CURRENCSTP1;
+extern uint16_t CURRENCSTP2;
 extern uint16_t MaxiPIDSwitch;
 #endif
 /* USER CODE END PV */
@@ -239,7 +245,7 @@ void SysTick_Handler(void)
 #endif
   
   
-#if PIDTunning
+#if IF_VOLTPIDTunning
   if (iPIDSwitch > MaxiPIDSwitch)
   {
     iPIDSwitch = 0;
@@ -248,18 +254,40 @@ void SysTick_Handler(void)
       PIDSwitch = 1;
 //      Volt.PWM = 20000 / Volt.EncFactor;
 //      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
-      Volt.Enc = ENCSTP1;
+      Volt.Enc = VOLTENCSTP1;
       __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
       Volt.CountPID = 0;
     }
     else
     {
       PIDSwitch = 0;      
-//      Volt.PWM = 25000 / Volt.EncFactor;
-//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
-      Volt.Enc = ENCSTP2;
+      Volt.Enc = VOLTENCSTP2;
       __HAL_TIM_SET_COUNTER(&HTIM_ENC_VOL, Volt.Enc);
       Volt.CountPID = 0;
+    }
+  }
+  else
+    iPIDSwitch ++;
+#endif  
+
+
+#if IF_CURRPIDTunning
+  if (iPIDSwitch > MaxiPIDSwitch)
+  {
+    iPIDSwitch = 0;
+    if (PIDSwitch == 0)
+    {
+      PIDSwitch = 1;
+      Curr.Enc = CURRENCSTP1;
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
+      Curr.CountPID = 0;
+    }
+    else
+    {
+      PIDSwitch = 0;    
+      Curr.Enc = CURRENCSTP2;
+      __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
+      Curr.CountPID = 0;
     }
   }
   else

@@ -116,6 +116,7 @@ float Tau2 = 6;
 
 
 uint16_t CurrErrStp1 = 5000;
+uint16_t CurrErrStp2 = 10000;
 float CurrKp1 = 0.1;
 float CurrKi1 = 0.4;
 float CurrKd1 = 0.01;
@@ -151,9 +152,15 @@ uint16_t Ramp = 1;
 uint16_t TriVolStep = 4;
 #endif
 
-#if PIDTunning
-uint16_t ENCSTP1 = 8000;
-uint16_t ENCSTP2 = 40000;
+#if IF_VOLTPIDTunning
+uint16_t VOLTENCSTP1 = 8000;
+uint16_t VOLTENCSTP2 = 40000;
+uint16_t MaxiPIDSwitch = 2000;
+#endif
+
+#if IF_CURRPIDTunning
+uint16_t CURRENCSTP1 = 4000;
+uint16_t CURRENCSTP2 = 8000;
 uint16_t MaxiPIDSwitch = 2000;
 #endif
 
@@ -1068,7 +1075,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
               Curr.pid.Kd = CurrKd1;
               Curr.pid.tau = CurrTau1;                
             }
-            else
+            else if ((Curr.pid.error < -CurrErrStp2) | (Curr.pid.error > CurrErrStp2))
             {
               Curr.pid.Kp = CurrKp2;
               Curr.pid.Ki = CurrKi2;
