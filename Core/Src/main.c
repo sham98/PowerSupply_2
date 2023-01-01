@@ -1421,6 +1421,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
           }            
 
+
+          if (Curr.KDspnew != CurrBstKnew)
+          {
+            if (iMaxFIR > MaxFIR)
+            {
+              iMaxFIR = 0;
+              Curr.KDspnew --;
+              Curr.KDspold ++;
+            }
+            else
+            {
+              iMaxFIR ++;
+            }
+          }            
+
+          
           
           iLED ++;
           if (iLED >= 2 * LED_Num)
@@ -1527,8 +1543,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
 //  ArrNumFIFO = 10;
-  Volt.KDspnew = MaxKnew;
-  Volt.KDspold = MaxKold;
 
   Volt.Mem = NoMem;
   LED_Data [LEDM1Num] = 0;
@@ -1560,28 +1574,32 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 //      __HAL_TIM_SET_COMPARE(&HTIM_PWM_VOL, TIM_CHANNEL_1, Volt.PWM);
       Volt.CountPID = 0;
     }
+    Volt.KDspnew = MaxKnew;
+    Volt.KDspold = MaxKold;
   }
   else if (htim == &HTIM_ENC_CURR)
   {
     Curr.Enc = __HAL_TIM_GET_COUNTER(htim);
-    Curr.CountDisp = Disp3s;
+//    Curr.CountDisp = Disp3s;
 
-    if ((Curr.Enc - Curr.OldEnc) > 30000)
-    {
-      Curr.Enc = 0;
-      __HAL_TIM_SET_COUNTER(htim, 0);
-    }
-    else if (Curr.Enc > Curr.MaxVolt)
-    {
-      Curr.Enc = Curr.MaxVolt;
-      __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
-    }
-
-    if (Curr.Status == Nor)                       // if it's still in display encoder
-    {
-      Curr.PWM = Curr.Enc / Curr.EncFactor * 2;
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
-    }
+//    if ((Curr.Enc - Curr.OldEnc) > 30000)
+//    {
+//      Curr.Enc = 0;
+//      __HAL_TIM_SET_COUNTER(htim, 0);
+//    }
+//    else if (Curr.Enc > Curr.MaxVolt)
+//    {
+//      Curr.Enc = Curr.MaxVolt;
+//      __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
+//    }
+//
+//    if (Curr.Status == Nor)                       // if it's still in display encoder
+//    {
+//      Curr.PWM = Curr.Enc / Curr.EncFactor * 2;
+//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
+//    }
+    Curr.KDspnew = MaxKnew;
+    Curr.KDspold = MaxKold;
   }
 }
 

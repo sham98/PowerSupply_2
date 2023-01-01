@@ -378,7 +378,7 @@ void SysTick_Handler(void)
       {
         Kmin = 1;
       }
-      Curr.CountDisp = Disp3s;
+//      Curr.CountDisp = Disp3s;
 
       if (Curr.SpdEnc >= MaxEncSpeed)
       {
