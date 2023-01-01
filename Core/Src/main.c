@@ -115,17 +115,17 @@ float Kd2 = 6;
 float Tau2 = 6;
 
 
-uint16_t CurrErrStp1 = 5000;
-uint16_t CurrErrStp2 = 10000;
-float CurrKp1 = 0.1;
-float CurrKi1 = 0.4;
-float CurrKd1 = 0.01;
+uint16_t CurrErrStp1 = 500;
+uint16_t CurrErrStp2 = 4000;
+float CurrKp1 = 0.05;
+float CurrKi1 = 0.3;
+float CurrKd1 = 0.1;
 float CurrTau1 = 0.01;
 
-float CurrKp2 = .1;
-float CurrKi2 = .4;
-float CurrKd2 = 6;
-float CurrTau2 = 6;
+float CurrKp2 = .2;
+float CurrKi2 = 1;
+float CurrKd2 = 2;
+float CurrTau2 = 3;
 
 
 uint8_t VOLT2ENC = 12;
@@ -1068,22 +1068,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           }
           else
           {
-            if ((Curr.pid.error < CurrErrStp1) & (Curr.pid.error > -CurrErrStp1))
-            {
-              Curr.pid.Kp = CurrKp1;
-              Curr.pid.Ki = CurrKi1;
-              Curr.pid.Kd = CurrKd1;
-              Curr.pid.tau = CurrTau1;                
-            }
-            else if ((Curr.pid.error < -CurrErrStp2) | (Curr.pid.error > CurrErrStp2))
-            {
-              Curr.pid.Kp = CurrKp2;
-              Curr.pid.Ki = CurrKi2;
-              Curr.pid.Kd = CurrKd2;
-              Curr.pid.tau = CurrTau2;                
-            }
-            Curr.PWM = PIDController_Update(&Curr.pid, Curr.Enc , VOLT2ENC * Curr.Volt);
-            __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR,TIM_CHANNEL_1, Curr.PWM);
+//            if ((Curr.pid.error < CurrErrStp1) & (Curr.pid.error > -CurrErrStp1))
+//            {
+//              Curr.pid.Kp = CurrKp1;
+//              Curr.pid.Ki = CurrKi1;
+//              Curr.pid.Kd = CurrKd1;
+//              Curr.pid.tau = CurrTau1;                
+//            }
+//            else if ((Curr.pid.error < -CurrErrStp2) | (Curr.pid.error > CurrErrStp2))
+//            {
+//              Curr.pid.Kp = CurrKp2;
+//              Curr.pid.Ki = CurrKi2;
+//              Curr.pid.Kd = CurrKd2;
+//              Curr.pid.tau = CurrTau2;                
+//            }
+//            Curr.PWM = PIDController_Update(&Curr.pid, Curr.Enc , VOLT2ENC * Curr.Volt);
+//            __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR,TIM_CHANNEL_1, Curr.PWM);
                         
             
             if ((Volt.pid.error < ErrStp1) & (Volt.pid.error > -ErrStp1))
@@ -1577,11 +1577,11 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
       __HAL_TIM_SET_COUNTER(htim, Curr.Enc);
     }
 
-//    if (Curr.Status == Nor)                       // if it's still in display encoder
-//    {
-//      Curr.PWM = Curr.Enc / Curr.EncFactor;
-//      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
-//    }
+    if (Curr.Status == Nor)                       // if it's still in display encoder
+    {
+      Curr.PWM = Curr.Enc / Curr.EncFactor * 2;
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.PWM);
+    }
   }
 }
 

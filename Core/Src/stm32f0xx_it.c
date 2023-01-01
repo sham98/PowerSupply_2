@@ -426,7 +426,7 @@ void SysTick_Handler(void)
       }
       Curr.OldEnc = Curr.Enc;
       __HAL_TIM_SET_COUNTER(&HTIM_ENC_CURR, Curr.Enc);
-      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor);
+      __HAL_TIM_SET_COMPARE(&HTIM_PWM_CURR, TIM_CHANNEL_1, Curr.Enc / Curr.EncFactor * 2);
     }    
   }
       

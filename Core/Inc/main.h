@@ -103,9 +103,9 @@ void Error_Handler(void);
 
 #define IF_Nor                  0
 #define IF_VOLTTest             0
-#define IF_CURRTest             0
+#define IF_CURRTest             1
 #define IF_VOLTPIDTunning       0
-#define IF_CURRPIDTunning       1
+#define IF_CURRPIDTunning       0
 
 
 #define HTIM_ENC_CURR       htim1
